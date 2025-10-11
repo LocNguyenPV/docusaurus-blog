@@ -10,7 +10,69 @@
 9) Cấu hình gitlab trong setting
 10) Cấu hình role cho user
 
-```yaml
+```dockerfile title="/jenkins/Dockerfile"
+FROM jenkins/jenkins:lts
+USER root
+ 
+# install curl, kubectl and docker CLI
+RUN apt-get update \
+  && apt-get install -y ca-certificates curl apt-transport-https gnupg2 lsb-release docker.io \
+  && curl -fsSL "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" -o /usr/local/bin/kubectl \
+  && chmod +x /usr/local/bin/kubectl /usr/bin/docker || true \
+  && apt-get clean && rm -rf /var/lib/apt/lists/*
+ 
+USER jenkins
+```
+
+```yaml title="/compose.yaml"
+services:
+  jenkins:
+    build:
+      context: ./jenkins
+    container_name: jenkins
+    restart: unless-stopped
+    privileged: true
+    user: root
+    ports:
+      - "3000:8080"   # Jenkins UI
+      - "50000:50000" # Agent communication
+    volumes:
+      #- /home/nhanjs/.kube:/root/.kube           # mount local kube config
+      #- /home/nhanjs/.minikube:/root/.minikube   # mount minikube certs and keys
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock # Allows Jenkins to run docker commands
+    networks:
+      - gitlab-net
+ 
+  jenkins-agent:
+    image: jenkins
+    container_name: jenkins-agent
+    restart: unless-stopped
+    privileged: true
+    extra_hosts:
+      - "jenkins.local:host-gateway"
+    environment:
+      - JENKINS_URL=http://jenkins:8080
+      - JENKINS_AGENT_NAME=docker-agent
+      - JENKINS_SECRET=<SECRET>
+      - JENKINS_WEB_SOCKET=true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /home/jenkins/agent:/home/jenkins/agent
+    networks:
+      - gitlab-net
+volumes:
+  jenkins_home:
+    name: jenkins_home
+networks:
+  gitlab-net:
+    name: gitlab-net
+```
+```bash title="get Jenkins init password"
+docker exec -it jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+```
+
+```yaml title="pipeline"
 pipeline {
     agent { label 'docker-agent' }
  
