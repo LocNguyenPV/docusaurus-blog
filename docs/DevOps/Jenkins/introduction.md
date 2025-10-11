@@ -10,7 +10,7 @@
 9) Cấu hình gitlab trong setting
 10) Cấu hình role cho user
 
-```dockerfile title="/jenkins/Dockerfile"
+```dockerfile
 FROM jenkins/jenkins:lts
 USER root
  
@@ -24,7 +24,7 @@ RUN apt-get update \
 USER jenkins
 ```
 
-```yaml title="/compose.yaml"
+```yaml
 services:
   jenkins:
     build:
@@ -72,7 +72,7 @@ networks:
 docker exec -it jenkins cat /var/jenkins_home/secrets/initialAdminPassword
 ```
 
-```yaml title="pipeline"
+```yaml
 pipeline {
     agent { label 'docker-agent' }
  
