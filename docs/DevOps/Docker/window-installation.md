@@ -39,11 +39,13 @@ Open Terminal and run
 docker run hello-world
 ```
 
-If everything work fine, you'll see
+:::tip[If everything work fine, you'll see]
 
 > Hello from Docker!
 
 This message shows that your installation appears to be working correctly
+
+:::
 
 Now you can start your journey with Docker!
 

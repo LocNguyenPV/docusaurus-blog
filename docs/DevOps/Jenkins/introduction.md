@@ -1,30 +1,30 @@
-# Introduction 
+# Introduction
 
-1) Cài đặt jenkin với docker
-3) Truy cập Jenkin UI
-4) Lấy init password
-5) Setup Jenkin
-6) Install plugin Role-based Authorization Strategy
-7) Install gitlab plugin
-8) Setting Authorization với role-based trong Security  
-9) Cấu hình gitlab trong setting
-10) Cấu hình role cho user
+1. Cài đặt jenkin với docker
+2. Truy cập Jenkin UI
+3. Lấy init password
+4. Setup Jenkin
+5. Install plugin Role-based Authorization Strategy
+6. Install gitlab plugin
+7. Setting Authorization với role-based trong Security
+8. Cấu hình gitlab trong setting
+9. Cấu hình role cho user
 
-```dockerfile
+```bash title="./jenkins/Dockerfile"
 FROM jenkins/jenkins:lts
 USER root
- 
+
 # install curl, kubectl and docker CLI
 RUN apt-get update \
   && apt-get install -y ca-certificates curl apt-transport-https gnupg2 lsb-release docker.io \
   && curl -fsSL "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" -o /usr/local/bin/kubectl \
   && chmod +x /usr/local/bin/kubectl /usr/bin/docker || true \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
- 
+
 USER jenkins
 ```
 
-```yaml
+```yaml title="./compose.yaml"
 services:
   jenkins:
     build:
@@ -34,7 +34,7 @@ services:
     privileged: true
     user: root
     ports:
-      - "3000:8080"   # Jenkins UI
+      - "3000:8080" # Jenkins UI
       - "50000:50000" # Agent communication
     volumes:
       #- /home/nhanjs/.kube:/root/.kube           # mount local kube config
@@ -43,7 +43,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock # Allows Jenkins to run docker commands
     networks:
       - gitlab-net
- 
+
   jenkins-agent:
     image: jenkins
     container_name: jenkins-agent
@@ -68,31 +68,32 @@ networks:
   gitlab-net:
     name: gitlab-net
 ```
+
 ```bash title="get Jenkins init password"
 docker exec -it jenkins cat /var/jenkins_home/secrets/initialAdminPassword
 ```
 
-```yaml
+```yaml title="pipeline file"
 pipeline {
     agent { label 'docker-agent' }
- 
+
     environment {
         // GitLab Container Registry host and project (namespace/project)
         GITLAB_REGISTRY       = "gitlab.local:5050"
         GITLAB_PROJECT        = "devops/core2"
         GITLAB_CREDENTIALS    = "gitlab-cr"
- 
+
         FRONTEND_IMAGE = "${env.GITLAB_REGISTRY}/${env.GITLAB_PROJECT}/core2-frontend:latest"
         BACKEND_IMAGE  = "${env.GITLAB_REGISTRY}/${env.GITLAB_PROJECT}/core2-backend:latest"
     }
- 
+
     stages {
         stage('Check Docker') {
             steps {
                 sh 'docker --version'
             }
         }
- 
+
         stage('Build Frontend') {
             steps {
                 dir('frontend') {
@@ -102,7 +103,7 @@ pipeline {
                 }
             }
         }
- 
+
         stage('Build Backend') {
             steps {
                 dir('CoreAPI') {
@@ -112,7 +113,7 @@ pipeline {
                 }
             }
         }
- 
+
         stage('Push Images') {
             steps {
                 script {
@@ -127,7 +128,7 @@ pipeline {
                 }
             }
         }
- 
+
         stage('Confirm from CTO') {
             steps {
                 script {
@@ -139,7 +140,7 @@ pipeline {
                 }
             }
         }
- 
+
         stage('Deploy to K8s (Minikube)') {
             steps {
                 script {
@@ -152,7 +153,7 @@ pipeline {
                         kubectl apply -f k8s/frontend-deployment.yaml
                         kubectl apply -f k8s/frontend-service.yaml
                     '''
- 
+
                     echo "Deployment complete. Access frontend via:"
                     sh 'minikube service core2-frontend --url'
                 }
