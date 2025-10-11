@@ -2,6 +2,8 @@
 sidebar_position: 2
 ---
 
+<!-- truncate -->
+
 # Git - Dev/DevOps best friend
 
 In a software, **Git** is more than just a version control system - It's a <u>backbone</u> of the entire project. It acts as a <u>single source of truth</u>, it store anything related to code and infrastructure.

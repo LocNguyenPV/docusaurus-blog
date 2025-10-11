@@ -2,6 +2,8 @@
 sidebar_position: 1
 ---
 
+<!-- truncate -->
+
 # Introduction to CI/CD
 
 As a developer, at least one time you said or heard...
