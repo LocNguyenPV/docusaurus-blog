@@ -10,7 +10,7 @@ sidebar_position: 1
 4. Create empty folder and run `npx create-docusaurus@latest blog classic`
 5. Run `npm run start` to check
 6. Edit file `docusaurus.config.js` with following content
-   - `url`: https://{your-github-name}.github.io
+   - `url`: https://your-github-name.github.io
    - `baseUrl`: `/{repo-name}/` (ex: `/test-blog/`)
    - `organizationName`: your GitHub user name
    - `projectName`: repo name created in <u>step 3</u>
@@ -107,6 +107,9 @@ jobs:
 11. Go to repo setting on github
     ![github-page](./img/github-page.png)
 
-::: tips
-Prompt to create icon 'sticker design, icon, flat color, 2 color only black and white, coder, transparent background'
+:::tip
+Prompt to create icon
+
+> sticker design, icon, flat color, 2 color only black and white, coder, transparent background
+
 :::
