@@ -106,3 +106,7 @@ jobs:
 10. Push to github
 11. Go to repo setting on github
     ![github-page](./img/github-page.png)
+
+::: tips
+Prompt to create icon 'sticker design, icon, flat color, 2 color only black and white, coder, transparent background'
+:::
