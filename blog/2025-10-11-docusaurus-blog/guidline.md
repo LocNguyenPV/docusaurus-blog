@@ -1,8 +1,12 @@
 ---
-sidebar_position: 1
+slug: deploy-docusaurus
+title: Deploy Docusaurus into Github page
+authors: [me]
+tags: [tips]
 ---
+<!-- truncate -->
 
-# Deploy Docusaurus into Github page
+## Deploy Docusaurus into Github page
 
 1. Install nodejs (https://nodejs.org/en/download)
 2. Open terminal and type `node -v` to check node version
