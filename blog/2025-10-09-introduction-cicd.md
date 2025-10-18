@@ -1,5 +1,8 @@
 ---
-sidebar_position: 1
+slug: ci-cd-introduction
+title: Introduction to CI/CD
+authors: [me]
+tags: [ci/cd]
 ---
 
 <!-- truncate -->
