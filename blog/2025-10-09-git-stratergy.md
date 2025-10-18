@@ -1,7 +1,9 @@
 ---
-sidebar_position: 2
+slug: git-stratergy
+title: Git - Dev/DevOps best friend
+authors: [me]
+tags: [ci/cd, git]
 ---
-
 <!-- truncate -->
 
 # Git - Dev/DevOps best friend
