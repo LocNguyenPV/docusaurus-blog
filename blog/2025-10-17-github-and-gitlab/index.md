@@ -4,6 +4,7 @@ title: Github & Gitlab - Which one is better
 authors: [me]
 tags: [github, gitlab, ci/cd]
 ---
+<!-- truncate -->
 
 ![Meme](./1.jpg)
 
