@@ -1,8 +1,13 @@
 ---
-sidebar_position: 1
+slug: deploy-docusaurus
+title: Deploy Docusaurus into Github page
+authors: [me]
+tags: [tips]
 ---
 
-# Deploy Docusaurus into Github page
+<!-- truncate -->
+
+## Deploy Docusaurus into Github page
 
 1. Install nodejs (https://nodejs.org/en/download)
 2. Open terminal and type `node -v` to check node version
@@ -16,7 +21,7 @@ sidebar_position: 1
    - `projectName`: repo name created in <u>step 3</u>
    - `trailingSlash`: false
 7. Create `.github/workflows` folders in project
-8. Create `deploy.yml` file in `workflows` with content
+8. Create `deploy.yml` file in `workflow` with content
 
 ```yaml title="deploy.yml"
 name: Deploy to GitHub Pages
