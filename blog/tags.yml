@@ -8,16 +8,21 @@ github:
   permalink: /github
   description: GitHub tag description
 
+git:
+  label: Git
+  permalink: /git
+  description: Git tag description
+
 gitlab:
   label: GitLab
   permalink: /gitlab
   description: GitLab tag description
 
 ci/cd:
-  label: CI/CD 
+  label: CI/CD
   permalink: /ci-cd
   description: CI/CD tag description
 
 tips:
-  label: Tips 
+  label: Tips
   permalink: /tips
