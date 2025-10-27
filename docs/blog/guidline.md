@@ -15,8 +15,8 @@ sidebar_position: 1
    - `organizationName`: your GitHub user name
    - `projectName`: repo name created in <u>step 3</u>
    - `trailingSlash`: false
-7. Create `.github/workflow` folders in project
-8. Create `deploy.yml` file in `workflow` with content
+7. Create `.github/workflows` folders in project
+8. Create `deploy.yml` file in `workflows` with content
 
 ```yaml title="deploy.yml"
 name: Deploy to GitHub Pages
