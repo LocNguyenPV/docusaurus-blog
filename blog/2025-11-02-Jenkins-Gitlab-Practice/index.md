@@ -17,7 +17,7 @@ tags: [tips]
 
 Let's take a look into VM's architecture first
 ![VM's architecture](image-1.png)
-
+![alt text](image-4.png)
 The containers are organized into:
 
 - **NGINX container (NPM):**
@@ -27,10 +27,10 @@ The containers are organized into:
     - **Jenkins** on port **8080,443**
     - **Gitlab** on port **80,443**
 
-- **Technitium container (DNS):**
+<!-- - **Technitium container (DNS):**
 
   - **Port expose:** 5380
-  - Acts as a **local DNS**
+  - Acts as a **local DNS** -->
 
 - **Jenkins container:**
 
@@ -40,7 +40,7 @@ The containers are organized into:
 - **Gitlab container:**
   - **Port expose:** 80 (UI), 22 (ssh), 5050 (container registry)
 
-## Workflow
+## Public Workflow
 
 ![workflow](image-3.png)
 
