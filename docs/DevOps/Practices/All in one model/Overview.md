@@ -1,13 +1,5 @@
----
-slug: guideline-jenkins-to-docker
-title: Guideline deploy to docker from Jenkins
-authors: [me]
-tags: [tips]
----
 
-<!-- truncate -->
-
-# Guideline: CI/CD from scratch
+# Overview
 
 
 :::warning
@@ -20,11 +12,10 @@ This content only apply for lab purpose. If you want apply it into production, y
 
 **Final Result:** You will have the system which just `git push` and everything relate (build, check, approval, deploy) will run automatically
 
-## Overview 
-### Virtual Machine's architecture
+## Virtual Machine's architecture
 
 Let's take a look into VM's architecture first
-![VM's architecture](image-4.png)
+![VM's architecture](./images/image-1.png)
 The containers are organized into:
 
 - **NGINX container (NPM):**
@@ -34,10 +25,10 @@ The containers are organized into:
     - **Jenkins** on port **8080,443**
     - **Gitlab** on port **80,443**
 
-<!-- - **Technitium container (DNS):**
+- **Technitium container (DNS):**
 
   - **Port expose:** 5380
-  - Acts as a **local DNS** -->
+  - Acts as a **local DNS**
 
 - **Jenkins container:**
 
@@ -47,10 +38,10 @@ The containers are organized into:
 - **Gitlab container:**
   - **Port expose:** 80 (UI), 22 (ssh), 5050 (container registry)
 
-### Public Workflow
+## Public Workflow
 
-![workflow](image-3.png)
+![workflow](./images/image-3.png)
 
-### Pipeline
+## Pipeline
 
-![pipeline](image-2.png)
+![pipeline](./images/image-2.png)
