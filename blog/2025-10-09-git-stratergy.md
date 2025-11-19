@@ -4,6 +4,9 @@ title: Git - Dev/DevOps best friend
 authors: [me]
 tags: [ci/cd, git]
 ---
+
+What is Git? 🤔
+
 <!-- truncate -->
 
 # Git - Dev/DevOps best friend

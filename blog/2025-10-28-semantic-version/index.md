@@ -5,10 +5,11 @@ authors: [me]
 tags: [tips]
 ---
 
-<!-- truncate -->
 
 Have you ever confused when saw something like u <u>v2.1.3</u> or <u>v1.11.0-beta</u>.
+
 ![meme](meme.png)
+<!-- truncate -->
 
 ## What is that?
 
