@@ -10,7 +10,7 @@ Beside **access token**, we also have **refresh token**. They're best friend for
 
 <!-- truncate -->
 
-Have you ever see the alert like `Your session has expired` when use your app ? That's the signal of your access token has been expired. So may you ask the question...
+Have you ever seen the alert like `Your session has expired` when use your app ? That's the signal of your access token has been expired. So may you ask the question...
 
 ![meme](meme.png)
 
