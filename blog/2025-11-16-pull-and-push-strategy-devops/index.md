@@ -5,11 +5,12 @@ authors: [me]
 tags: [ci/cd, devops]
 ---
 
-<!-- truncate -->
 
 ![header-img](image.png)
 
-<!-- Work as DevOps, at least one time you heard "Push-based and Pull-based". So what is it? -->
+Work as DevOps, at least one time you heard "Push-based and Pull-based". So what is it?
+<!-- truncate -->
+
 
 Push-based or Pull-based are synchronize code/config between dev, server and repository - but mechanism of synchronization is different.
 

@@ -26,3 +26,18 @@ ci/cd:
 tips:
   label: Tips
   permalink: /tips
+
+api:
+  label: API
+  permalink: /api
+  description: API tag description
+
+dev:
+  label: Development
+  permalink: /development
+  description: Development tag description
+
+programming:
+  label: Programming
+  permalink: /programming
+  description: Programming tag description  
