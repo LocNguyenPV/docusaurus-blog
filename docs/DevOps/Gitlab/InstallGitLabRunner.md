@@ -1,6 +1,6 @@
 # Install GitLab Runner with Docker
 ## Prequisites
-- Already install GitLab Server (if not, check [Install GitLab with Docker](/DevOps/Gitlab/InstallByDocker))
+- Already install GitLab Server (if not, check [Install GitLab with Docker](/docs/DevOps/Gitlab/InstallByDocker))
 
 ## Steps
 1) Update `docker-compose.yaml` file with the following content:
