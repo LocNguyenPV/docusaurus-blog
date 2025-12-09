@@ -4,7 +4,9 @@ title: Github & Gitlab - Which one is better
 authors: [me]
 tags: [github, gitlab, ci/cd]
 ---
+
 What is difference between **Github** and **Gitlab**
+
 <!-- truncate -->
 
 ![Meme](./1.jpg)
@@ -24,7 +26,7 @@ Yah, it's true 😏 Let's me tell you why...
 - **Github** acts like a <u>friendly neighbor</u> with large plugin community. If you want to do something like CI/CD, you must install a plugin
 - **Gitlab** acts like an <u>CEO</u> which have a powerful skills, specially about CI/CD and devops
 
-|    Criteria                    | Github                             | Gitlab                            |
+| Criteria               | Github                             | Gitlab                            |
 | ---------------------- | ---------------------------------- | --------------------------------- |
 | **CI/CD**              | Need install third-party plugin    | Already installed                 |
 | **Project management** | Small project, open source         | Large project, enterprise company |
