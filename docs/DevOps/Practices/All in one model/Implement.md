@@ -638,19 +638,6 @@ git push origin main
 
 ---
 
-## Architecture Summary
-
-| Component           | Port | Purpose          | Access                |
-| ------------------- | ---- | ---------------- | --------------------- |
-| **Nginx**           | 80   | Reverse proxy    | Public                |
-| **Jenkins**         | 8080 | CI/CD automation | Public (via firewall) |
-| **GitLab UI**       | 8081 | Git repo + CI    | Public (via firewall) |
-| **GitLab SSH**      | 22   | Git SSH access   | Public (via firewall) |
-| **GitLab Registry** | 5380 | Docker registry  | Public (via firewall) |
-| **Docker Daemon**   | -    | Build engine     | Attached to Jenkins   |
-
----
-
 ## Security Best Practices
 
 1. **Change default passwords immediately** (Jenkins admin, GitLab root)
