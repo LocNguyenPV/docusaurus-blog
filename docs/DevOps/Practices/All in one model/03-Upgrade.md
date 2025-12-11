@@ -1,3 +1,8 @@
+---
+sidebar_label: "Upgrade"
+position: 3
+---
+
 # Upgrade Version: Run with K8s
 
 This guide shows how to deploy applications from Jenkins directly to Kubernetes using `kubectl apply`.
