@@ -108,3 +108,22 @@ docker compose logs -f jenkins
 If you see Jenkins log “Jenkins is fully up and running”, you're all set.
 
 ---
+
+### Get admin password
+
+Access to jenkins container and run:
+
+```bash
+cat jenkins_home/secrets/initialAdminPassword
+```
+
+---
+
+## How to backup?
+
+We usually use the "old" but most efficient:
+
+- Stop container or at least, stop an heavy job when backup
+- Zip `jenkins_home` folder (or volume snapshot if use cloud storage)
+
+---
