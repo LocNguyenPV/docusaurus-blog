@@ -387,9 +387,3 @@ Then create a Jenkins job `myapp-post-deploy` that runs smoke tests or notificat
 3. **Keep GitOps repo separate** from app repo for cleaner Git history
 4. **Enable ArgoCD automatic sync** to be truly GitOps—Git becomes the source of truth
 5. **Monitor both Jenkins and ArgoCD**—watch logs for issues
-
----
-
-## Summary: Full GitOps Flow
-
----
