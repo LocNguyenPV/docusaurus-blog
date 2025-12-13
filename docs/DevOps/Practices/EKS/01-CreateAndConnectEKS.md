@@ -1,40 +1,44 @@
-Day 1: Làm quen AWS và tạo cụm EKS đầu tiên (dành cho người mới 100%)
+# Quản lý truy cập với IAM và tạo cụm EKS
+
+![alt text](./images/day1/image.png)
+
+:::note[TLDR;]
+Sau khi hoàn thành:
+
+- Đăng nhập được vào AWS bằng IAM user riêng
+- Cấu hình xong AWS CLI trên máy
+- Cấu hình file Infrastructure as Code (IaC) đầu tiên.
+- Tạo được một EKS cluster lab chạy được.
+  :::
 
 ---
 
-## Mở đầu: Vì sao nên bắt đầu với EKS?
+## Bước 1: Tạo IAM user
 
-Nếu bạn là developer hoặc engineer muốn bước chân vào thế giới cloud, đặc biệt là Kubernetes trên AWS, rất dễ bị “ngợp” bởi quá nhiều dịch vụ và khái niệm mới. Day 1 này được thiết kế cho đúng đối tượng “chưa biết gì về AWS”, giúp bạn đi trọn một vòng: từ tạo tài khoản, chuẩn bị môi trường, đến việc nhìn thấy cụm EKS đầu tiên với lệnh `kubectl get nodes`.
+Sau khi đăng ký tài khoản AWS, phần lớn người mới sẽ có xu hướng dùng luôn tài khoản root <u>(email + password đăng ký ban đầu)</u>. Đây là thói quen cực kỳ xấu trong môi trường production.
 
-Mục tiêu cuối bài: bạn đăng nhập được vào AWS bằng IAM user riêng, cấu hình xong AWS CLI trên máy, và tạo được một EKS cluster lab chạy được.
+**Khuyến nghị:**
 
-![alt text](image.png)
+- **Root account**: Chỉ cho việc quản trị cấp cao.
+- **IAM user**: dùng hằng ngày để thao tác (kể cả lab).
 
----
-
-## Bước 1: Tạo tài khoản và user riêng để không “chơi” bằng root
-
-Sau khi đăng ký tài khoản AWS, phần lớn người mới sẽ có xu hướng dùng luôn tài khoản root (email + password đăng ký ban đầu). Đây là thói quen cực kỳ xấu trong môi trường production, nhưng ngay từ lab bạn cũng nên tập tư duy đúng.
-
-Ý tưởng chuẩn:
-
-- Tài khoản root: dùng rất ít, chỉ cho việc quản trị cấp cao.
-- Tài khoản IAM user: dùng hằng ngày để thao tác (kể cả lab).
-
+:::tip[Best practice]
 Ngay khi đăng nhập lần đầu:
 
 - Bật MFA cho root để bảo vệ tài khoản gốc.
+- Tạo IAM user để dùng hàng ngày với phân quyền vừa đủ.
+  :::
 
 ### Tạo IAM user
 
 - Truy cập `IAM` -> `Users` -> `Create User`
-  ![alt text](image-4.png)
+  ![alt text](./images/day1/image-4.png)
 
 - Cho phép đăng nhập console
-  ![alt text](image-5.png)
+  ![alt text](./images/day1/image-5.png)
 
 - Gán quyền `AdministratorAccess`
-  ![alt text](image-6.png)
+  ![alt text](./images/day1/image-6.png)
 
 :::danger
 Trong môi trường thực tế, không nên gán quyền `AdministratorAccess` cho IAM - trừ khi bạn được yêu cầu như vậy
@@ -42,50 +46,50 @@ Trong môi trường thực tế, không nên gán quyền `AdministratorAccess`
 
 ---
 
-## Bước 2: Tạo Access Key và kết nối máy của bạn với AWS
+## Bước 2: Tạo Access Key và kết nối máy local với AWS
 
-Để dùng AWS qua command line (AWS CLI, eksctl, Terraform, v.v.), bạn cần một “chiếc chìa khóa” gồm:
+Để dùng AWS qua command line (AWS CLI, eksctl, Terraform, v.v.), ta cần một “chiếc chìa khóa” gồm:
 
-- Access Key ID
-- Secret Access Key
+- **Access Key ID**
+- **Secret Access Key**
 
-Chìa khóa này gắn với IAM user `lab-admin`, và máy cá nhân sẽ dùng nó để “tự giới thiệu” với AWS.
+:::note
+Chìa khóa này gắn với `IAM user`
+:::
 
-Tư duy:
+Các bước thực hiện:
 
-- Máy ngoài AWS → cần Access Key.
-- Máy trong AWS (EC2, Lambda) → ưu tiên IAM Role, không hard-code Access Key.
-
-Quy trình:
-
-- Mở IAM → Users → chọn `lab-admin`, để tạo Access Key sẽ có 2 option như hình
-  ![alt text](image-1.png)
+- Mở IAM → Users → chọn `<your-IAM-user>`, để tạo Access Key sẽ có 2 option như hình
+  ![alt text](./images/day1/image-1.png)
 
 - Chọn `CLI`
-  ![alt text](image-2.png)
+  ![alt text](./images/day1/image-2.png)
 
-- Ghi lại Access Key ID và Secret Access Key vào nơi an toàn, không commit lên git, không gửi qua chat công khai.
-  ![alt text](image-3.png)
+- Ghi lại **Access Key ID** và **Secret Access Key** vào nơi an toàn.
+  ![alt text](./images/day1/image-3.png)
+:::danger
+- Không commit lên git.
+- Không gửi qua chat công khai.
+:::
 
 ---
 
-## Bước 3: Chuẩn bị công cụ trên máy – AWS CLI, kubectl, eksctl
+## Bước 3: Cài đặt AWS CLI trên máy
 
-Giờ bạn biến máy cá nhân thành “trạm điều khiển” cho AWS:
-
+Để connect và thao tác với AWS, ta cần phải cài đặt bộ công cụ CLI trên máy:
 - AWS CLI v2: để dùng lệnh `aws ...`.
 - `kubectl`: để giao tiếp với Kubernetes cluster.
-- `eksctl`: để tạo và quản lý EKS cluster bằng lệnh, thay vì click tay.
+- `eksctl`: để tạo và quản lý EKS cluster bằng lệnh
 
 ### Install AWS CLI 2
 
 - Truy cập [link](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html), chọn gói cài phù hợp cho OS
-  ![alt text](image-8.png)
+  ![alt text](./images/day1/image-8.png)
 
 - Tải về và chạy
 
 - Setup `path` cho phù hợp (hoặc để default cũng được)
-  ![alt text](image-10.png)
+  ![alt text](./images/day1/image-10.png)
 
 :::tip[Dành cho Window]
 Nếu setup custom path, nhớ cài đặt `path` vào **Environments Variables**
@@ -101,27 +105,23 @@ Nếu setup custom path, nhớ cài đặt `path` vào **Environments Variables*
 
 - Chạy `aws --version` để kiểm tra CLI.
 
-  ![alt text](image-11.png)
+  ![alt text](./images/day1/image-11.png)
 
 - Chạy `kubectl version --client` để kiểm tra kubectl.
 
-  ![alt text](image-12.png)
+  ![alt text](./images/day1/image-12.png)
 
 - Chạy `eksctl version` để kiểm tra eksctl.
 
-  ![alt text](image-13.png)
+  ![alt text](./images/day1/image-13.png)
 
 ---
 
-## Bước 4: Cấu hình AWS CLI – để lệnh của bạn “biết” đang là ai
+## Bước 4: Cấu hình AWS CLI
 
-AWS CLI hiện tại mới chỉ là “cái vỏ”. Bạn cần:
+Bây giờ ta cần cấu hình CLI sử dụng AccessKey và SecrectKey đã tạo để kết nối tới AWS
 
-- Gắn nó với IAM user `lab-admin` thông qua Access Key.
-- Chọn region mặc định (lab dùng `ap-southeast-1`).
-- Chọn định dạng output (json).
-
-Chỉ cần lệnh:
+Chạy câu lệnh:
 
 ```bash
 aws configure
@@ -134,15 +134,15 @@ Và nhập:
 - Default region name: Custom region của bạn
 - Default output format: `json`
 
-Sau đó, test:
+![alt text](./images/day1/image-14.png)
+
+Sau đó, chạy lệnh để test:
 
 ```bash
 aws sts get-caller-identity
 ```
 
 Nếu trả về một JSON có Account, Arn là bạn đã kết nối thành công.
-
-![alt text](image-14.png)
 
 :::tip[Nếu gặp lỗi `Error when retrieving token from sso: Token has expired and refresh failed`]
 
@@ -158,58 +158,61 @@ Nếu trả về một JSON có Account, Arn là bạn đã kết nối thành c
 
 ---
 
-## Bước 5: Thiết kế quyền cho EKS – IAM Role cho control plane và worker
+## Bước 5: Cấu hình cho EKS – IAM Role cho control plane và worker
 
-EKS là Kubernetes được AWS quản lý, nên control plane và worker cần quyền để “gọi” các dịch vụ AWS khác (EC2, VPC, ELB, IAM, EBS,…).
+EKS là Kubernetes được AWS quản lý, nên control plane và worker cần quyền để tạo các dịch vụ AWS khác (EC2, VPC, ELB, IAM, EBS,…).
 
-Bạn sẽ tạo 2 role:
+![alt text](./images/day1/image-9.png)
+
+Tạo 2 role:
 
 1. **Role cho EKS control plane (Cluster Role)**
 
-   - Use case: “EKS - Cluster”.
+   - Use case: `EKS - Cluster`.
+     ![alt text](./images/day1/image-15.png)
    - Policy: `AmazonEKSClusterPolicy`.
 
 2. **Role cho worker node (Node Role)**
-   - Service: EC2.
+   - Service: `EC2`.
+     ![alt text](./images/day1/image-16.png)
    - Policies:
      - `AmazonEKSWorkerNodePolicy`
-       ![alt text](image-17.png)
+       ![alt text](./images/day1/image-17.png)
      - `AmazonEC2ContainerRegistryReadOnly`
-       ![alt text](image-18.png)
+       ![alt text](./images/day1/image-18.png)
      - `AmazonEKS_CNI_Policy`
-       ![alt text](image-19.png)
+       ![alt text](./images/day1/image-19.png)
 
 Sau khi tạo, hãy ghi lại ARN của 2 role này để dùng trong file cấu hình cluster.
-
-![alt text](image-9.png)
-![alt text](image-15.png)
-![alt text](image-16.png)
-![alt text](image-22.png)
-![alt text](image-23.png)
+![alt text](./images/day1/image-22.png)
+![alt text](./images/day1/image-23.png)
 
 ---
 
-## Bước 6: Tạo key pair EC2 – “chìa khóa SSH” vào node
+## Bước 6: Tạo key pair EC2
 
-Để sau này có thể SSH vào worker node (debug, kiểm tra cấu hình), bạn nên tạo key pair:
+Để sau này có thể SSH vào worker node (debug, kiểm tra cấu hình), ta cần tạo key pair:
 
 - EC2 → Key Pairs → Create key pair.
-- Name: `lab-key`.
+  ![alt text](./images/day1/image-20.png)
+- Name: `<your-key-name>`.
 - Key pair type: RSA.
 - Private key file format: `.pem`.
-- Lưu file `.pem` trên máy (không chia sẻ).
+  ![alt text](./images/day1/image-21.png)
+- Lưu file `.pem` trên máy.
 
-Key pair này sẽ được tham chiếu trong phần cấu hình node group của EKS.
-
-![alt text](image-20.png)
-![alt text](image-21.png)
+:::danger
+Tuyệt đối không chia sẻ key này với ai
+:::
 
 ---
 
 ## Bước 7: Viết file cấu hình EKS với eksctl
 
-Thay vì click tay từng bước, bạn mô tả cluster bằng YAML (hạ tầng-as-code). Ví dụ file `lab-cluster.yaml` được tổ chức như sau:
+Tạo file `lab-cluster.yaml` với nội dung như sau:
 
+- **apiVersion:** eksctl.io/v1alpha5
+- **kind:** ClusterConfig
 - **metadata**:
 
   - `name`: tên cluster (ví dụ `lab-eks-cluster`).
@@ -228,42 +231,39 @@ Thay vì click tay từng bước, bạn mô tả cluster bằng YAML (hạ tầ
 
 - **addons**:
 
-  - `vpc-cni`, `coredns`, `kube-proxy`, `metrics-server`.
+  - `vpc-cni`
+  - `coredns`
+  - `kube-proxy`
+  - `metrics-server`
 
 - **managedNodeGroups**:
   - name: `student-workers`.
-  - instanceType: một loại nhỏ/rẻ (ví dụ `t3.medium` hoặc `c7i-flex.large`).
+  - instanceType: một loại nhỏ/rẻ (ví dụ `t3.small` hoặc `c7i-flex.large`).
   - amiFamily: `Ubuntu2404`.
-  - minSize, maxSize, desiredCapacity.
-  - ssh.allow: `true`, ssh.publicKeyName: `lab-key`.
+  - minSize
+  - maxSize
+  - desiredCapacity.
+  - ssh.allow: `true`, ssh.publicKeyName: `<your-key-name>`.
   - iam.instanceRoleARN: ARN role worker.
-
-> Gợi ý hình:
->
-> - Hình 13: Screenshot VS Code/IDE với file `lab-cluster.yaml`, highlight/box đỏ:
->   - ARN role cluster
->   - ARN role worker
->   - tên key pair
->   - dòng `nat.gateway: Disable` kèm comment “LAB ONLY”.
 
 ---
 
-## Bước 8: Tạo cluster – khoảnh khắc “kubectl get nodes”
+## Bước 8: Tạo cluster
 
-Giờ là lúc thực sự “bật” cluster:
+Giờ là lúc tạo cluster bằng lệnh:
 
 1. Mở terminal trong thư mục chứa `lab-cluster.yaml`.
 2. Kiểm tra lại:
-
-   ```bash
+```bash
    aws sts get-caller-identity
-   ```
+```
 
-3. Chạy:
+3. Chạy (có thể set timeout lớn hơn nếu tài nguyên lớn):
 
-   ```bash
-   eksctl create cluster -f lab-cluster.yaml
-   ```
+```bash
+eksctl create cluster -f lab-cluster.yaml --timeout=40m
+```
+![alt text](./images/day1/image-24.png)
 
 4. Đợi khoảng 15–20 phút. Bạn sẽ thấy log như:
 
@@ -272,6 +272,8 @@ Giờ là lúc thực sự “bật” cluster:
    - tạo nodegroup
    - tạo addons
    - cluster ready
+  
+![alt text](./images/day1/image-26.png)
 
 5. Khi lệnh hoàn tất, chạy:
 
@@ -280,32 +282,36 @@ Giờ là lúc thực sự “bật” cluster:
    ```
 
 Nếu bạn thấy một hoặc vài dòng node với STATUS = `Ready`, nghĩa là bạn đã tạo thành công cụm EKS đầu tiên của mình.
+![alt text](./images/day1/image-25.png)
 
-> Gợi ý hình:
->
-> - Hình 14: Terminal hiển thị log `eksctl create cluster -f lab-cluster.yaml` (đang tạo stack, nodegroup, addons,…).
-> - Hình 15: Terminal với `kubectl get nodes` và 1–2 node `Ready`.
+:::tip[Nếu CLI hiển thị lỗi]
+- Kiểm tra xem có phải `exceeded max wait time for StackCreateComplete waiter` -> nâng thời gian timeout lên
+
+- Truy cập vào `AWS` -> `CloudFormation` -> `Stacks` -> `<your-cluster-name>`, mở tab `Event` để kiểm tra
+![alt text](./images/day1/image-27.png)
+
+- Nếu trạng thái là:
+  - `CREATE_IN_PROGRESS`: AWS vẫn đang cố gắng tạo resource
+  - `CREATE_FAILED` / `ROLLBACK_IN_PROGRESS`: Kiểm tra xem báo lỗi gì và sửa
+
+- Chạy câu lệnh xóa resource trước khi chạy lại (BẮT BUỘc)
+```bash
+eksctl delete cluster -f lab-cluster.yaml
+``` 
+
+:::
 
 ---
 
-## Kết thúc Day 1: Tập thói quen “bật lên rồi tắt”
+## Xóa tài nguyên
 
 Vì đây là lab và budget giới hạn, đừng quên:
 
-- Khi không học nữa, xoá cluster:
+- Khi không cần nữa, xoá cluster:
 
-  ```bash
+```bash
   eksctl delete cluster -f lab-cluster.yaml
-  ```
+```
 
 - Thi thoảng vào EC2 Console kiểm tra xem còn instance, load balancer, volume “rác” nào chạy không.
-
-Thành quả Day 1:
-
-- Bạn đã biết cách dùng IAM user thay vì root.
-- Máy local có thể nói chuyện với AWS qua AWS CLI.
-- Bạn hiểu cơ bản IAM Role cho EKS control plane và worker.
-- Bạn viết được file yaml để mô tả cluster.
-- Bạn thấy được node EKS thật sự đang chạy.
-
 ---
