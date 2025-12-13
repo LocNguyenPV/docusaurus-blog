@@ -6,7 +6,7 @@ Day 1: Làm quen AWS và tạo cụm EKS đầu tiên (dành cho người mới 
 
 Nếu bạn là developer hoặc engineer muốn bước chân vào thế giới cloud, đặc biệt là Kubernetes trên AWS, rất dễ bị “ngợp” bởi quá nhiều dịch vụ và khái niệm mới. Day 1 này được thiết kế cho đúng đối tượng “chưa biết gì về AWS”, giúp bạn đi trọn một vòng: từ tạo tài khoản, chuẩn bị môi trường, đến việc nhìn thấy cụm EKS đầu tiên với lệnh `kubectl get nodes`.
 
-Mục tiêu cuối ngày: bạn đăng nhập được vào AWS bằng IAM user riêng, cấu hình xong AWS CLI trên máy, và tạo được một EKS cluster lab chạy được.
+Mục tiêu cuối bài: bạn đăng nhập được vào AWS bằng IAM user riêng, cấu hình xong AWS CLI trên máy, và tạo được một EKS cluster lab chạy được.
 
 ![alt text](image.png)
 
@@ -24,12 +24,21 @@ Sau khi đăng ký tài khoản AWS, phần lớn người mới sẽ có xu hư
 Ngay khi đăng nhập lần đầu:
 
 - Bật MFA cho root để bảo vệ tài khoản gốc.
-- Tạo IAM user, ví dụ `lab-admin`, cho phép đăng nhập console, và gán quyền `AdministratorAccess` để giảm ma sát khi học, đồng thời ghi rõ trong tài liệu đây là “lab only”.
 
-![alt text](image-4.png)
-![alt text](image-5.png)
-![alt text](image-6.png)
+### Tạo IAM user
 
+- Truy cập `IAM` -> `Users` -> `Create User`
+  ![alt text](image-4.png)
+
+- Cho phép đăng nhập console
+  ![alt text](image-5.png)
+
+- Gán quyền `AdministratorAccess`
+  ![alt text](image-6.png)
+
+:::danger
+Trong môi trường thực tế, không nên gán quyền `AdministratorAccess` cho IAM - trừ khi bạn được yêu cầu như vậy
+:::
 
 ---
 
@@ -49,13 +58,14 @@ Tư duy:
 
 Quy trình:
 
-- Mở IAM → Users → chọn `lab-admin`.
-- Tab “Security credentials” → tạo Access Key cho mục đích CLI.
-- Ghi lại Access Key ID và Secret Access Key vào nơi an toàn, không commit lên git, không gửi qua chat công khai.
+- Mở IAM → Users → chọn `lab-admin`, để tạo Access Key sẽ có 2 option như hình
+  ![alt text](image-1.png)
 
-![alt text](image-1.png)
-![alt text](image-2.png)
-![alt text](image-3.png)
+- Chọn `CLI`
+  ![alt text](image-2.png)
+
+- Ghi lại Access Key ID và Secret Access Key vào nơi an toàn, không commit lên git, không gửi qua chat công khai.
+  ![alt text](image-3.png)
 
 ---
 
@@ -67,23 +77,39 @@ Giờ bạn biến máy cá nhân thành “trạm điều khiển” cho AWS:
 - `kubectl`: để giao tiếp với Kubernetes cluster.
 - `eksctl`: để tạo và quản lý EKS cluster bằng lệnh, thay vì click tay.
 
-Pattern triển khai:
+### Install AWS CLI 2
 
-- Tạo thư mục `C:\tool`.
-- Đưa `kubectl.exe` và `eksctl.exe` vào `C:\tool`.
-- Thêm `C:\tool` vào biến môi trường PATH (System Properties → Advanced → Environment Variables).
+- Truy cập [link](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html), chọn gói cài phù hợp cho OS
+  ![alt text](image-8.png)
 
-Sau khi cài:
+- Tải về và chạy
+
+- Setup `path` cho phù hợp (hoặc để default cũng được)
+  ![alt text](image-10.png)
+
+:::tip[Dành cho Window]
+Nếu setup custom path, nhớ cài đặt `path` vào **Environments Variables**
+:::
+
+### Install `eksctl`
+
+- Truy cập [link](https://github.com/eksctl-io/eksctl/releases) để tải
+
+- Giải nén và copy `eksctl.exe` vào cùng một folder của **AWS CLI v2**
+
+### Kiểm tra
 
 - Chạy `aws --version` để kiểm tra CLI.
+
+  ![alt text](image-11.png)
+
 - Chạy `kubectl version --client` để kiểm tra kubectl.
+
+  ![alt text](image-12.png)
+
 - Chạy `eksctl version` để kiểm tra eksctl.
 
-> Gợi ý hình:
->
-> - Hình 5: Wizard cài AWS CLI (màn hình “Completed”).
-> - Hình 6: Cửa sổ Environment Variables → PATH có `C:\tool`.
-> - Hình 7: Terminal hiển thị kết quả `aws --version`, `kubectl version --client`, `eksctl version`.
+  ![alt text](image-13.png)
 
 ---
 
@@ -105,7 +131,7 @@ Và nhập:
 
 - AWS Access Key ID
 - AWS Secret Access Key
-- Default region name: `ap-southeast-1`
+- Default region name: Custom region của bạn
 - Default output format: `json`
 
 Sau đó, test:
@@ -116,10 +142,19 @@ aws sts get-caller-identity
 
 Nếu trả về một JSON có Account, Arn là bạn đã kết nối thành công.
 
-> Gợi ý hình:
->
-> - Hình 8: Terminal lúc nhập `aws configure` (các prompt 4 dòng).
-> - Hình 9: Terminal với output `aws sts get-caller-identity`.
+![alt text](image-14.png)
+
+:::tip[Nếu gặp lỗi `Error when retrieving token from sso: Token has expired and refresh failed`]
+
+- Thử chạy lệnh `aws sts get-caller-identity --profile default`
+- Nếu vẫn không được, truy cập:
+  - Window: `%USERPROFILE%\.aws\`
+  - Mac/Linux: `~/.aws/`
+- Kiểm tra file `credentials` để đảm bảo `access key` và `secret key` đúng
+- Kiểm tra file `config`, đảm bảo không có cấu hình `sso_session` hay `sso_start_url` trong profile `default`. Nếu có thì xóa/comment lại
+- Chạy lại lệnh `aws sts get-caller-identity`
+
+:::
 
 ---
 
@@ -138,15 +173,19 @@ Bạn sẽ tạo 2 role:
    - Service: EC2.
    - Policies:
      - `AmazonEKSWorkerNodePolicy`
+       ![alt text](image-17.png)
      - `AmazonEC2ContainerRegistryReadOnly`
+       ![alt text](image-18.png)
      - `AmazonEKS_CNI_Policy`
+       ![alt text](image-19.png)
 
 Sau khi tạo, hãy ghi lại ARN của 2 role này để dùng trong file cấu hình cluster.
 
-> Gợi ý hình:
->
-> - Hình 10: Màn hình IAM → Create role, chọn service EKS, use case “EKS - Cluster”.
-> - Hình 11: Màn hình Add permissions cho worker role với 3 policy đã tick.
+![alt text](image-9.png)
+![alt text](image-15.png)
+![alt text](image-16.png)
+![alt text](image-22.png)
+![alt text](image-23.png)
 
 ---
 
@@ -162,9 +201,8 @@ Sau khi tạo, hãy ghi lại ARN của 2 role này để dùng trong file cấu
 
 Key pair này sẽ được tham chiếu trong phần cấu hình node group của EKS.
 
-> Gợi ý hình:
->
-> - Hình 12: Màn hình “Create key pair” (Name, Type, Format).
+![alt text](image-20.png)
+![alt text](image-21.png)
 
 ---
 
@@ -271,69 +309,3 @@ Thành quả Day 1:
 - Bạn thấy được node EKS thật sự đang chạy.
 
 ---
-
-## Image Checklist cho Day 1
-
-Để bài blog trực quan và “có chứng cứ”, bạn có thể chuẩn bị các hình sau:
-
-1. **Sơ đồ tổng quan kiến trúc lab**
-
-   - Laptop → AWS → EKS (control plane + node group).
-
-2. **IAM – Create user**
-
-   - Màn hình tạo IAM user `lab-admin`, tick “Provide user access to AWS Management Console”.
-
-3. **Gán AdministratorAccess cho user**
-
-   - Màn hình chọn policy `AdministratorAccess`.
-
-4. **Tạo Access Key**
-
-   - Tab “Security credentials” của user, phần “Create access key”.
-   - Màn hình hiển thị Access Key (che giá trị thật).
-
-5. **Cài AWS CLI**
-
-   - Wizard “Completed the AWS Command Line Interface v2 Setup”.
-
-6. **PATH cho C:\tool**
-
-   - Cửa sổ Environment Variables → PATH có `C:\tool`.
-
-7. **Kiểm tra tool**
-
-   - Terminal hiển thị `aws --version`, `kubectl version --client`, `eksctl version`.
-
-8. **aws configure**
-
-   - Terminal trong lúc nhập 4 dòng cấu hình.
-
-9. **aws sts get-caller-identity**
-
-   - JSON hiển thị Account, Arn (che số nếu muốn).
-
-10. **IAM Role – EKS Cluster**
-
-    - Màn hình Create role chọn service EKS, use case “EKS - Cluster”.
-
-11. **IAM Role – Worker node**
-
-    - Màn hình Add permissions với 3 policy worker đã tick.
-
-12. **EC2 Key Pair**
-
-    - Màn hình “Create key pair” với Name, Type = RSA, Format = .pem.
-
-13. **File YAML trong editor**
-
-    - VS Code/IDE mở `lab-cluster.yaml`, highlight các chỗ cần sửa (Account ID, ARN, key,…).
-
-14. **eksctl create cluster**
-
-    - Terminal chạy lệnh, log đang tạo CloudFormation stack, nodegroup, addons.
-
-15. **kubectl get nodes**
-    - Terminal với danh sách node, STATUS = Ready.
-
-Chỉ cần bạn tự chụp lại các bước mình làm thực tế theo checklist này, bài blog sẽ vừa dễ theo dõi vừa tạo được niềm tin mạnh mẽ cho người mới bắt đầu.
