@@ -1,4 +1,4 @@
-# Deploy App With Helm Chart
+# Day 5: Deploy App With Helm Chart
 
 ---
 

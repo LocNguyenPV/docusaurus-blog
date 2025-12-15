@@ -1,4 +1,4 @@
-## Install Nginx Ingress
+# Day 4: Nginx Ingress + NLB + ACM
 
 Day 4 sẽ tập trung vào việc **cài Nginx Ingress Controller dùng NLB + ACM**, mở đường cho ứng dụng của bạn ra internet, song song với ArgoCD.
 
