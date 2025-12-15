@@ -1,4 +1,4 @@
-# Quản lý truy cập với IAM và tạo cụm EKS
+# Day 1: Quản lý truy cập với IAM và tạo cụm EKS
 
 ![alt text](./images/day1/image.png)
 
@@ -67,16 +67,17 @@ Các bước thực hiện:
 
 - Ghi lại **Access Key ID** và **Secret Access Key** vào nơi an toàn.
   ![alt text](./images/day1/image-3.png)
-:::danger
+  :::danger
 - Không commit lên git.
 - Không gửi qua chat công khai.
-:::
+  :::
 
 ---
 
 ## Bước 3: Cài đặt AWS CLI trên máy
 
 Để connect và thao tác với AWS, ta cần phải cài đặt bộ công cụ CLI trên máy:
+
 - AWS CLI v2: để dùng lệnh `aws ...`.
 - `kubectl`: để giao tiếp với Kubernetes cluster.
 - `eksctl`: để tạo và quản lý EKS cluster bằng lệnh
@@ -254,6 +255,7 @@ Giờ là lúc tạo cluster bằng lệnh:
 
 1. Mở terminal trong thư mục chứa `lab-cluster.yaml`.
 2. Kiểm tra lại:
+
 ```bash
    aws sts get-caller-identity
 ```
@@ -263,6 +265,7 @@ Giờ là lúc tạo cluster bằng lệnh:
 ```bash
 eksctl create cluster -f lab-cluster.yaml --timeout=40m
 ```
+
 ![alt text](./images/day1/image-24.png)
 
 4. Đợi khoảng 15–20 phút. Bạn sẽ thấy log như:
@@ -272,7 +275,7 @@ eksctl create cluster -f lab-cluster.yaml --timeout=40m
    - tạo nodegroup
    - tạo addons
    - cluster ready
-  
+
 ![alt text](./images/day1/image-26.png)
 
 5. Khi lệnh hoàn tất, chạy:
@@ -285,19 +288,22 @@ Nếu bạn thấy một hoặc vài dòng node với STATUS = `Ready`, nghĩa l
 ![alt text](./images/day1/image-25.png)
 
 :::tip[Nếu CLI hiển thị lỗi]
+
 - Kiểm tra xem có phải `exceeded max wait time for StackCreateComplete waiter` -> nâng thời gian timeout lên
 
 - Truy cập vào `AWS` -> `CloudFormation` -> `Stacks` -> `<your-cluster-name>`, mở tab `Event` để kiểm tra
-![alt text](./images/day1/image-27.png)
+  ![alt text](./images/day1/image-27.png)
 
 - Nếu trạng thái là:
+
   - `CREATE_IN_PROGRESS`: AWS vẫn đang cố gắng tạo resource
   - `CREATE_FAILED` / `ROLLBACK_IN_PROGRESS`: Kiểm tra xem báo lỗi gì và sửa
 
 - Chạy câu lệnh xóa resource trước khi chạy lại (BẮT BUỘc)
+
 ```bash
 eksctl delete cluster -f lab-cluster.yaml
-``` 
+```
 
 :::
 
@@ -314,4 +320,5 @@ Vì đây là lab và budget giới hạn, đừng quên:
 ```
 
 - Thi thoảng vào EC2 Console kiểm tra xem còn instance, load balancer, volume “rác” nào chạy không.
+
 ---
