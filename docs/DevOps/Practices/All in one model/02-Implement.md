@@ -12,7 +12,7 @@ position: 2
 - **Nginx**: Reverse proxy to route traffic
 - **Jenkins**: CI/CD automation
 - **GitLab**: Self-hosted Git with built-in CI
-- **GitLab Registry**: Private Docker image registry
+- **Harbor**: Private Docker image registry
 - **Firewall**: GCP firewall rules to control access
 
 ---
@@ -116,60 +116,51 @@ cd ~/devops-stack
 Create a `docker-compose.yml` file:
 
 ```yaml
-version: "3.8"
-
 services:
-  # Nginx Reverse Proxy
-  nginx:
-    image: nginx:latest
-    container_name: nginx-proxy
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - jenkins
-      - gitlab
+  nginx-proxy-manager:
+    image: "jc21/nginx-proxy-manager:latest"
+    container_name: nginx-proxy-manager
     restart: always
+    ports:
+      - "80:80" # HTTP Traffic
+      - "81:81" # Web UI Admin
+      - "443:443" # HTTPS Traffic
+    volumes:
+      - ./npm/data:/data
+      - ./npm/letsencrypt:/etc/letsencrypt
     networks:
       - devops-network
+      - harbor_network
 
   # Jenkins
   jenkins:
     image: jenkins/jenkins:lts
     container_name: jenkins
     ports:
-      - "8080:8080"
       - "50000:50000"
     volumes:
       - jenkins_data:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-      - JENKINS_OPTS="--prefix=/jenkins"
     user: root
     restart: always
     networks:
       - devops-network
+      - harbor_network
 
   # GitLab
   gitlab:
     image: gitlab/gitlab-ce:latest
     container_name: gitlab
-    hostname: gitlab.example.com
     ports:
-      - "8081:80"
-      - "443:443"
-      - "22:22"
-      - "5380:5380"
+      - "222:22"
     volumes:
       - gitlab_config:/etc/gitlab
       - gitlab_logs:/var/log/gitlab
       - gitlab_data:/var/opt/gitlab
     environment:
       GITLAB_OMNIBUS_CONFIG: |
-        external_url 'http://gitlab.example.com:8081'
-        gitlab_rails['gitlab_shell_ssh_port'] = 22
-        registry_external_url 'http://gitlab.example.com:5380'
+        external_url 'http://<YOUR-DOMAIN>'
+        gitlab_rails['gitlab_shell_ssh_port'] = 222
     restart: always
     networks:
       - devops-network
@@ -183,6 +174,102 @@ volumes:
 networks:
   devops-network:
     driver: bridge
+  harbor_network:
+    external: true
+    name: harbor_harbor
+```
+
+---
+
+## Step 4: Install Harbor
+
+```
+# 1. Download and unzip Harbor
+wget https://github.com/goharbor/harbor/releases/download/v2.10.0/harbor-offline-installer-v2.10.0.tgz
+tar xzvf harbor-offline-installer-v2.10.0.tgz
+cd harbor/
+
+# 2. Copy template config
+cp harbor.yml.tmpl harbor.yml
+
+# 3. Config harbor.yml
+vi harbor.yml
+```
+
+Config `harbor.yml` with following:
+
+```yaml
+hostname: <EXTERNAL-IP-VM>
+
+http:
+  port: 8083
+
+harbor_admin_password: Harbor12345
+
+database:
+  password: root123
+  max_idle_conns: 100
+  max_open_conns: 900
+  conn_max_lifetime: 5m
+  conn_max_idle_time: 0
+
+data_volume: /data
+
+trivy:
+  ignore_unfixed: false
+  skip_update: false
+  offline_scan: false
+  security_check: vuln
+  insecure: false
+
+jobservice:
+  max_job_workers: 10
+  job_loggers:
+    - STD_OUTPUT
+    - FILE
+  logger_sweeper_duration: 1 #days
+
+notification:
+  webhook_job_max_retry: 3
+  webhook_job_http_client_timeout: 3 #seconds
+
+log:
+  level: info
+  local:
+    rotate_count: 50
+    rotate_size: 200M
+    location: /var/log/harbor
+
+_version: 2.10.0
+
+proxy:
+  http_proxy:
+  https_proxy:
+  no_proxy:
+  components:
+    - core
+    - jobservice
+    - trivy
+
+upload_purging:
+  enabled: true
+  age: 168h
+  interval: 24h
+  dryrun: false
+
+cache:
+  enabled: false
+  expire_hours: 24
+```
+
+Run following command to install
+
+```bash
+# Generate docker-compose
+sudo ./prepare
+
+# Start Harbor (8+ containers)
+sudo ./install.sh  # or docker compose up -d
 ```
 
 ---
