@@ -173,13 +173,6 @@ Ta cần mở các port sau trên Google Cloud Firewall:
 - **222**: Gitlab SSH
 - **30000-32767:** Dải port dành cho NodePort của Kubernetes.
 
-:::note
-Do ở đây NPM sẽ đóng vai trò như người điều hướng nên chúng ta sẽ không cần map port từ container ra VM. Chúng ta sẽ cấu hình NPM bằng **container name**.
-
-![alt text](./images/day03/image-2.png)
-
-:::
-
 ---
 
 ## Kết luận
