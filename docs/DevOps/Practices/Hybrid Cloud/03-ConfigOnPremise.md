@@ -24,7 +24,47 @@ mkdir ~/devops-stack && cd ~/devops-stack
 
 ## 3. Cài đặt DevOps Stack (Docker Compose)
 
-Tạo file `docker-compose.yml` để quản lý Jenkins, GitLab và Nginx Proxy Manager (NPM). Việc dùng NPM giúp chúng ta cấu hình Domain và SSL cho Harbor/GitLab cực kỳ dễ dàng sau này.
+Trước tiên, chúng ta cần tạo 1 file docker riêng cho **Jenkins** vì cần phải cài đặt Docker và Google Cloud CLI vào trong Jenkins để phục vụ việc build và push image to Artifact Registry sau này
+
+```bash
+mkdir ~/jenkins
+sudo nano Dockerfile
+```
+Copy và dán vào `Dockerfile`
+
+```Dockerfile
+FROM jenkins/jenkins:lts
+USER root
+
+# 1. Install base lib
+RUN apt-get update && apt-get install -y \
+    lsb-release \
+    curl \
+    gnupg \
+    apt-transport-https \
+    ca-certificates
+
+# 2. Install Docker
+RUN curl -fsSLo /usr/share/keyrings/docker-archive-keyring.asc \
+    https://download.docker.com/linux/debian/gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.asc] \
+    https://download.docker.com/linux/debian $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list \
+    && apt-get update && apt-get install -y docker-ce-cli
+
+# 3. Install GCI 
+RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | \
+    tee -a /etc/apt/sources.list.d/google-cloud-sdk.list \
+    && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | \
+    gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg \
+    && apt-get update && apt-get install -y google-cloud-cli
+
+# 4. Remove to reduce image size
+RUN rm -rf /var/lib/apt/lists/*
+
+USER jenkins
+```
+
+Trở về lại thư mục `devops-stack`, tạo file `docker-compose.yml` để quản lý Jenkins, GitLab và Nginx Proxy Manager (NPM). 
 
 ```yaml
 services:
@@ -45,7 +85,7 @@ services:
 
   # Jenkins
   jenkins:
-    build: ./jenkins
+    build: ./jenkins # Path to Jenkins Dockerfile
     container_name: jenkins
     # ports:
     #   - "50000:50000"
@@ -101,6 +141,11 @@ networks:
     external: true
     name: harbor_harbor
 ```
+
+:::tip[Tại sao lại sử dụng NPM]
+Việc dùng NPM giúp chúng ta cấu hình Domain và SSL cho Harbor/GitLab cực kỳ dễ dàng sau này.
+:::
+
 
 ---
 
