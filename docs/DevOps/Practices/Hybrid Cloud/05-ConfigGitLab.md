@@ -86,13 +86,11 @@ Host gitlab-personal
 - Lưu mã Token này lại (chúng ta sẽ dùng nó để Jenkins "ghi đè" cấu hình YAML hoàn toàn tự động).
   ![pat](./images/day05/image-3.png)
 
----
-
-### 💡 Góc kinh nghiệm: "Đừng quên cấu hình Network cho GitLab"
-
+:::tip[Security fix cho Gilab]
 Trong quá trình làm, mình từng gặp lỗi Jenkins không thể clone code dù đã add đúng SSH Key. Hóa ra là do GitLab chạy trong Docker có cơ chế bảo mật chặn các yêu cầu từ mạng nội bộ (Outbound requests).
 
-- **Mẹo:** Hãy vào **Admin Area** -> **Settings** -> **Network** -> **Outbound requests**, tích chọn _"Allow requests to the local network"_ để Jenkins và GitLab có thể tìm thấy nhau dễ dàng hơn.
+=> Hãy vào **Admin Area** -> **Settings** -> **Network** -> **Outbound requests**, tích chọn _"Allow requests to the local network"_ để Jenkins và GitLab có thể tìm thấy nhau dễ dàng hơn.
+:::
 
 ---
 
