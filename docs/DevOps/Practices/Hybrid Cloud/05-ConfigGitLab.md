@@ -23,7 +23,7 @@ sudo docker exec -it gitlab grep 'Password:' /etc/gitlab/initial_root_password
 
 ---
 
-## 1. Group và Repository: Tư duy tổ chức theo GitOps
+## 2. Group và Repository: Tư duy tổ chức theo GitOps
 
 Để quản lý chuyên nghiệp, chúng ta không nên tạo các dự án rời rạc. Hãy bắt đầu bằng cách tạo một **Group** tên là `hybrid-cloud`.
 
@@ -44,11 +44,11 @@ Việc tách đôi giúp tránh lỗi "vòng lặp vô tận". Nếu bạn để
 
 ---
 
-### 2. Cấu hình
+### 3. Cấu hình
 
 Để Jenkins có thể "nói chuyện" được với GitLab thông qua Domain chúng ta đã cấu hình ở [Bài 4](./04-ConfigNPM.md) và có thể clone/push code lên repository thì ta cần phải thực hiện vài việc sau:
 
-**2.1. Sửa lỗi đường dẫn Clone (External URL)**
+**3.1. Sửa lỗi đường dẫn Clone (External URL)**
 Nếu bạn thấy link clone trên GitLab hiện IP container hoặc `localhost`, hãy vào file cấu hình `gitlab.rb` trên máy chủ và chỉnh sửa:
 
 ```bash
@@ -57,7 +57,7 @@ external_url 'http://gitlab.codebyluke.io.vn'
 
 Sau đó chạy `gitlab-ctl reconfigure`. Lúc này, mọi đường dẫn sẽ chuẩn hóa theo Domain qua Nginx Proxy Manager.
 
-**2.2. Kết nối bằng SSH Key (Dành cho máy dev)**
+**3.2. Kết nối bằng SSH Key (Dành cho máy dev)**
 Thay vì dùng mật khẩu (kém an toàn), chúng ta sử dụng cặp khóa SSH:
 
 - Tạo key trên máy local của bạn với câu lệnh: `ssh-keygen -t ed25519`.
@@ -74,7 +74,7 @@ Host gitlab-personal
   PreferredAuthentications publickey
 ```
 
-**2.3. Personal Access Token (PAT) - Chìa khóa cho sự tự động**
+**3.3. Personal Access Token (PAT) - Chìa khóa cho sự tự động**
 
 Để Jenkins có quyền "thay mặt" bạn cập nhật phiên bản ứng dụng vào Repo `ecommerce-manifest`, bạn cần tạo một **Personal Access Token**:
 
