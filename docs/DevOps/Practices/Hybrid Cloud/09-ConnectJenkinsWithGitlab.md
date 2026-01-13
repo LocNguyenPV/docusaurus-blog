@@ -1,4 +1,4 @@
-# Bài 7: Jenkins - Kết nối GitLab "chuẩn chỉ"
+# Bài 9: Jenkins - Kết nối GitLab "chuẩn chỉ"
 
 Ở [bài trước](08-ConfigCredentialsJenkins.md), chúng ta đã cài đặt `credentials` hoàn chỉnh cho bài lab. Ở bài viết này chúng ta sẽ sử dụng để kết nối với **Gitlab**
 
@@ -30,5 +30,3 @@
 2. **Credentials:** Được tổ chức khoa học, phân tách rõ ràng giữa mục đích quản trị hệ thống và thực thi pipeline.
 
 Hệ thống đã sẵn sàng. Ở bài tiếp theo, chúng ta sẽ bắt tay vào viết **Jenkinsfile** đầu tiên để hiện thực hóa quy trình CI/CD!
-
-

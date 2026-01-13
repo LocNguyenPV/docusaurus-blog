@@ -1,4 +1,4 @@
-# Bài 6: Jenkins - Thiết lập "Bộ máy thực thi" và Phân quyền QA chuyên nghiệp
+# Bài 6: Jenkins - Thiết lập "Bộ máy thực thi"
 
 Sau khi đã có "trạm chỉ huy" GitLab ở [bài trước](06-ConfigJenkins.md), hôm nay chúng ta sẽ đánh thức "gã khổng lồ" **Jenkins**. Đây là nơi mọi logic build, test, push image và đặc biệt là bước phê duyệt của QA sẽ diễn ra.
 
@@ -19,8 +19,6 @@ Nếu bạn lựa chọn kết nối Jenkins với Gitlab thông qua SSH key th�
 :::
 
 ## 2. Quản lý Credentials
-
-Thay vì dùng SSH phức tạp, chúng ta sẽ dùng **PAT (Personal Access Token)** đã tạo ở Bài 5 làm Credential.
 
 Để tiện cho việc quản lý credentials theo từng project, chúng ta có thể khởi tạo domain `hybrid-cloud` để chứa những token liên quan đến project
 

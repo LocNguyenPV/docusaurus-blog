@@ -1,4 +1,4 @@
-# Bài 7: Jenkins Security - Chứa thông tin "nhạy cảm" sao cho đúng
+# Bài 8: Jenkins Security - Chứa thông tin "nhạy cảm" sao cho đúng
 
 Ở [bài trước](07-ConfigRoleJenkins.md), chúng ta đã cấu hình phân quyền cho `QA` role. Ở bài này, chúng ta sẽ đi về phần thông tin "nhạy cảm" (token, password) trong Jenkins.
 
@@ -107,10 +107,14 @@ Các bước tạo `service-account`:
 - **Account description:** `Push image from pipeline to registry`
   ![alt text](./images/day08/image-2.png)
 - **Permission:** `Artifact Registry Writer`
-  ![alt text](./images/day08/image-3.png)
+
+![alt text](./images/day08/image-3.png)
+
 - Lưu lại, sau đó truy cập để tạo **Key**
   - **Key type:** JSON
-    ![alt text](./images/day08/image-4.png)
+
+![alt text](./images/day08/image-4.png)
+
 - Trình duyệt sẽ tự động tải về một file `JSON`
 
 Import trên Jenkins:

@@ -70,11 +70,16 @@ Sau khi định nghĩa xong 2 Role trên, tiến hành gán `role` cho user `QA`
 
 - Vào mục **Assign Roles**
 - Chọn **Add user** ở `Global` và `Item`
-  ![assign role](./images/day07/image-4.png)
+
+![assign role](./images/day07/image-4.png)
+
 - Nhập **User Id** là `qa` (hoặc username bạn tạo ở bài trước)
-  ![assign user](./images/day07/image-5.png)
+
+![assign user](./images/day07/image-5.png)
+
 - Sau khi tạo, tích chọn `role` tương ứng
-  ![check role](./images/day07/image-6.png)
+
+![check role](./images/day07/image-6.png)
 
 ---
 
