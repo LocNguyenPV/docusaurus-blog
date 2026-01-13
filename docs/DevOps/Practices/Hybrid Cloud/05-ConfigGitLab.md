@@ -76,18 +76,22 @@ Host gitlab-personal
 
 **3.3. Personal Access Token (PAT) - Chìa khóa cho sự tự động**
 
-Để Jenkins có quyền "thay mặt" bạn cập nhật phiên bản ứng dụng vào Repo `ecommerce-manifest`, bạn cần tạo một **Personal Access Token**:
+Để Jenkins có quyền "thay mặt" bạn cập nhật phiên bản ứng dụng vào Repo `ecommerce-manifest`, bạn cần tạo hai **Personal Access Token**
+
+- Một token có quyền `api` để Jenkins update build stage cho GitLab - `jenkins-report`
+- Một token có quyền `write_repository` và `read_repository` để Jenkins clone/push code - `jenkins-pipeline`
+
+Quy trình thực hiện như sau:
 
 - Vào **User Settings** -> **Personal Access Tokens**.
-- Đặt tên là `jenkins-token`.
-- Tích chọn quyền:
-  - `write_repository`.
-  - `read_repository`.
-- Lưu mã Token này lại (chúng ta sẽ dùng nó để Jenkins "ghi đè" cấu hình YAML hoàn toàn tự động).
+- Đặt tên cho token.
+- Tích chọn quyền tương ứng
+- Lưu mã Token này lại để sử dụng cho bài sau
+
   ![pat](./images/day05/image-3.png)
 
 :::tip[Security fix cho Gilab]
-Trong quá trình làm, mình từng gặp lỗi Jenkins không thể clone code dù đã add đúng SSH Key. Hóa ra là do GitLab chạy trong Docker có cơ chế bảo mật chặn các yêu cầu từ mạng nội bộ (Outbound requests).
+Trong quá trình làm, mình từng gặp lỗi Jenkins không thể clone code dù đã add đúng Key. Hóa ra là do GitLab chạy trong Docker có cơ chế bảo mật chặn các yêu cầu từ mạng nội bộ (Outbound requests).
 
 => Hãy vào **Admin Area** -> **Settings** -> **Network** -> **Outbound requests**, tích chọn _"Allow requests to the local network"_ để Jenkins và GitLab có thể tìm thấy nhau dễ dàng hơn.
 :::
