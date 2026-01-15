@@ -73,7 +73,7 @@ resource "aws_instance" "web_server" {
   # Map (Bảng Key-Value): Thường dùng để gắn nhãn (Tags)
   tags = {
     Project = "Blog-Demo"
-    Owner   = "VinhThai"
+    Owner   = "LukeNguyen"
   }
 
   # 3. CONDITION (ĐIỀU KIỆN)
