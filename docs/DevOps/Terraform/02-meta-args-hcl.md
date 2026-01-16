@@ -3,30 +3,32 @@
 Ở bài trước, chúng ta đã làm quen với cấu trúc cơ bản của một Block trong HCL:
 `resource "loại" "tên" { cấu_hình }`
 
-Ví dụ, để tạo một máy ảo, bạn khai báo `ami`, `instance_type`... Đó là những **Arguments (Tham số)** riêng biệt của từng loại tài nguyên.
+Ví dụ, để tạo một máy ảo, bạn phải khai báo `ami`, `instance_type`... Đó là những **Arguments (Tham số)** riêng biệt của từng loại tài nguyên.
 
-Tuy nhiên, Terraform cung cấp cho chúng ta một bộ công cụ quyền lực hơn, có thể áp dụng cho **MỌI** loại resource, giúp thay đổi hành vi của chúng. Đó chính là **Meta-Arguments**.
-
-Hãy tưởng tượng:
-
-* **Arguments thường:** "Cho tôi một cái bánh Pizza đế dày." (Mô tả sản phẩm).
-* **Meta-Arguments:** "Cho tôi 5 cái bánh như thế", hoặc "Đừng làm bánh cho đến khi nước ngọt được mang ra". (Mô tả quy trình/hành vi).
+Ngoài ra, HCL còn cung cấp cho chúng ta một bộ công cụ quyền lực khác, có thể áp dụng cho **MỌI** loại resource, giúp thay đổi hành vi của chúng. Đó chính là **Meta-Arguments**.
 
 Hôm nay, chúng ta sẽ cùng khám phá "Tứ đại quyền lực" của Meta-Arguments: `count`, `for_each`, `depends_on` và `lifecycle`.
 
+![HCL four](./images/meta-args/image.png)
+
 ---
 
-## 1. `count`: Thuật phân thân chi thuật
+## Meta Arguments với Arguments
 
-Đây là meta-argument phổ biến nhất. Thay vì copy-paste code để tạo 5 cái máy ảo giống hệt nhau, bạn chỉ cần dùng `count`.
+Hãy tưởng tượng:
 
-### Bài toán:
+- **Arguments:** "Tạo cho tôi máy ảo với HĐH linux version x.x trên AWS".
+- **Meta-Arguments:**
+  - Tạo cho tôi 5 cái máy ảo với HĐH linux version x.x trên AWS
+  - Chỉ tạo máy ảo khi database tạo xong
 
-Tạo 3 con EC2 server tên là `web-0`, `web-1`, `web-2`.
+## 1. `count`
 
-### Giải pháp:
+Đây là **meta-argument** phổ biến nhất. Thay vì copy-paste code để tạo 5 cái máy ảo giống hệt nhau, bạn chỉ cần dùng `count`.
 
 ```hcl
+# Tạo 3 con EC2 server tên là `web-0`, `web-1`, `web-2`.
+
 resource "aws_instance" "web" {
   count         = 3 # <--- Meta-argument
   ami           = "ami-12345678"
@@ -34,59 +36,51 @@ resource "aws_instance" "web" {
 
   tags = {
     # count.index sẽ chạy từ 0, 1, 2
-    Name = "web-${count.index}" 
+    Name = "web-${count.index}"
   }
 }
 
 ```
 
 **Ưu điểm:** Nhanh, gọn.
-**Nhược điểm:** `count` hoạt động dựa trên số thứ tự (index). Nếu bạn xóa con `web-1` (ở giữa), Terraform sẽ dồn con `web-2` xuống thành `web-1` và tạo lại con mới. Điều này có thể gây thảm họa nếu đó là Stateful Application (Database).
+**Nhược điểm:** `count` hoạt động dựa trên số thứ tự (index). Nếu bạn xóa con `web-1` (ở giữa), Terraform sẽ dồn con `web-2` xuống thành `web-1` và tạo lại con mới.
 
 ---
 
-## 2. `for_each`: Vòng lặp thông minh
+## 2. `for_each`
 
 Ra đời sau `count` để khắc phục nhược điểm về index. `for_each` cho phép bạn lặp qua một **Map** (Danh sách Key-Value) hoặc một **Set** (Tập hợp chuỗi).
 
-### Bài toán:
-
-Tạo 2 user IAM với tên cụ thể là "Alice" và "Bob".
-
-### Giải pháp:
-
 ```hcl
-variable "user_names" {
+# Tạo 3 EC2 server tên là `web-0`, `web-1`, `web-2`.
+variable "server_name" {
   type    = set(string)
-  default = ["Alice", "Bob"]
+  default = ["web-0", "web-1", "web-2"]
 }
 
-resource "aws_iam_user" "the_users" {
-  for_each = var.user_names # <--- Meta-argument
+resource "aws_instance" "web" {
+  for_each = var.server_name # <--- Meta-argument
+  ami           = "ami-12345678"
+  instance_type = "t2.micro"
 
-  name = each.key # Lấy giá trị hiện tại (Alice hoặc Bob)
+  tags = {
+    Name = each.key
+  }
 }
-
 ```
 
-**Tại sao nó xịn hơn `count`?**
-Nếu bạn xóa "Alice" khỏi danh sách, Terraform chỉ xóa đúng user "Alice". User "Bob" vẫn an toàn, không bị đổi index, không bị ảnh hưởng.
+:::tip[Tại sao lại xịn hơn `count`]
+Nếu bạn xóa "web-1" khỏi danh sách, Terraform chỉ xóa đúng instance "web-1". Những instances khác vẫn an toàn, không bị đổi index, không bị ảnh hưởng.
+:::
 
 ---
 
-## 3. `depends_on`: Đèn tín hiệu giao thông
+## 3. `depends_on`
 
-Mặc định, Terraform chạy **song song** (Parallelism) để tiết kiệm thời gian. Nó tự động hiểu các phụ thuộc ngầm (ví dụ: Máy ảo dùng ID của mạng -> Mạng tạo trước, Máy tạo sau).
-
-Nhưng đôi khi, có những phụ thuộc mà Terraform không tự hiểu được. Lúc này ta cần chỉ định thủ công.
-
-### Bài toán:
-
-Bạn muốn tạo một máy ảo (EC2), nhưng ứng dụng trong máy ảo đó cần kết nối đến Database (S3/RDS). Bạn muốn chắc chắn S3 phải tạo xong hoàn toàn thì mới được phép tạo EC2.
-
-### Giải pháp:
+Trong thực tế việc triển khai một instance/service này phụ thuộc vào việc triển khai một instance/service khác là không hiếm. Để giải quyết bài toán này trong IaC, HCL cung cấp một siêu tham số là `depends_on`
 
 ```hcl
+# Tạo Database (S3/RDS) trước, sau khi xong mới tạo EC2
 resource "aws_s3_bucket" "database" {
   bucket = "my-app-data"
 }
@@ -96,14 +90,14 @@ resource "aws_instance" "app" {
   instance_type = "t2.micro"
 
   # Bắt buộc chờ S3 xong mới được chạy
-  depends_on = [ aws_s3_bucket.database ] 
+  depends_on = [ aws_s3_bucket.database ]
 }
 
 ```
 
 ---
 
-## 4. `lifecycle`: Kim bài miễn tử & Hơn thế nữa
+## 4. `lifecycle`
 
 Block `lifecycle` giúp bạn can thiệp vào vòng đời sinh-tử của tài nguyên. Nó có 3 quyền năng chính:
 
@@ -174,10 +168,10 @@ resource "aws_instance" "us_server" {
 
 Meta-Arguments chính là thứ phân biệt giữa một người biết viết Terraform và một người **thành thạo** Terraform.
 
-* Dùng `count`/`for_each` để code gọn gàng (DRY).
-* Dùng `depends_on` để kiểm soát luồng chạy.
-* Dùng `lifecycle` để bảo vệ hệ thống khỏi sai sót.
+- Dùng `count`/`for_each` để code gọn gàng (DRY).
+- Dùng `depends_on` để kiểm soát luồng chạy.
+- Dùng `lifecycle` để bảo vệ hệ thống khỏi sai sót.
 
-Hy vọng bài viết này giúp bạn nắm vững những "siêu năng lực" này để áp dụng vào dự án thực tế. Ở bài tiếp theo, chúng ta sẽ cùng thực hành xây dựng một mô hình Hybrid Cloud hoàn chỉnh nhé!
+Hy vọng bài viết này giúp bạn nắm vững những "siêu tham số" này để áp dụng vào dự án thực tế. Ở bài tiếp theo, chúng ta sẽ cùng bắt tay vào thực hành!
 
 **Happy Coding! 👨‍💻**
