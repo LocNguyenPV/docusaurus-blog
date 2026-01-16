@@ -23,6 +23,29 @@
 
 ![destroy](image-12.png)
 
+```bash
+# 1. Tải ảnh đĩa Ubuntu 22.04 Cloud Image (Nhẹ hơn file ISO cài đặt nhiều)
+wget https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.disk.img
+
+# 2. Tạo một máy ảo rỗng với ID là 9000 (Để làm mẫu)
+qm create 9000 --name "ubuntu-cloud-template" --memory 2048 --net0 virtio,bridge=vmbr0
+
+# 3. Nhập file ảnh đĩa vừa tải vào máy ảo 9000
+qm importdisk 9000 jammy-server-cloudimg-amd64.disk.img local-lvm
+
+# 4. Cấu hình ổ cứng và thứ tự boot
+qm set 9000 --scsihw virtio-scsi-pci --scsi0 local-lvm:vm-9000-disk-0
+qm set 9000 --boot c --bootdisk scsi0
+
+# 5. Cấu hình Cloud-Init (Để Terraform sau này chọc vào được)
+qm set 9000 --ide2 local-lvm:cloudinit
+qm set 9000 --serial0 socket --vga serial0
+qm set 9000 --agent enabled=1
+
+# 6. Biến nó thành Template (Kết thúc)
+qm template 9000
+```
+
 ```hcl
 terraform {
   required_providers {
