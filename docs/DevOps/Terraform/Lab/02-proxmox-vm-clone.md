@@ -6,7 +6,7 @@ Mục tiêu bài này rất đơn giản: **Không truy cập vào Web UI của 
 
 ## 1. Chuẩn bị tài nguyên
 
-:::tip[Cài đặt hạ tầng]
+:::info[Cài đặt hạ tầng]
 Trước khi vô bài lab, chúng ta sẽ cần phải cài đặt Proxmox và Terraform. Nếu bạn chưa có thì có thể tham khảo link sau:
 
 - [Cài đặt Proxmox với VMWare](../../../Tips/InstallProxmoxWithVMWare.md)
@@ -235,7 +235,7 @@ Khi không còn nhu cầu xài nữa, ta chỉ cần chạy lệnh `terraform de
 
 Đời không như mơ, đây là những lỗi mình đã gặp phải và cách xử lý, hy vọng giúp bạn tiết kiệm vài giờ đồng hồ vò đầu bứt tai.
 
-### 🐛 Lỗi 1: `Error: vm 'ubuntu-cloud-template' not found`
+### Lỗi: `Error: vm 'ubuntu-cloud-template' not found`
 
 * **Hiện tượng:** Terraform bảo không tìm thấy template, dù mình đã tạo rồi.
 * **Nguyên nhân:**
@@ -245,7 +245,7 @@ Khi không còn nhu cầu xài nữa, ta chỉ cần chạy lệnh `terraform de
 
 * **Cách fix:** Kiểm tra kỹ tên VM (dùng lệnh `qm config <vmid> | grep name`) và tên Node, sửa lại trong code cho khớp 100%.
 
-### 🐛 Lỗi 2: `Error: 500 no such file '/cluster/nextid'`
+### Lỗi: `Error: 500 no such file '/cluster/nextid'`
 
 * **Hiện tượng:** Terraform không thể tự động lấy ID tiếp theo cho máy ảo.
 * **Nguyên nhân:** Dịch vụ Cluster của Proxmox bị "kẹt" hoặc file host bị sai (thường gặp khi chạy Proxmox trên VMware/VirtualBox).
@@ -253,7 +253,7 @@ Khi không còn nhu cầu xài nữa, ta chỉ cần chạy lệnh `terraform de
 * *Cách "chữa cháy":* Thêm dòng `vmid = 101` vào code để chỉ định cứng ID luôn.
 * *Cách triệt để:* Kiểm tra file `/etc/hosts` trên Proxmox xem IP và Hostname có khớp nhau không, sau đó reboot.
 
-### 🐛 Lỗi 3: `valid credentials but cannot retrieve user list`
+### Lỗi: `valid credentials but cannot retrieve user list`
 
 * **Hiện tượng:** Đăng nhập được nhưng không có quyền làm gì cả.
 * **Nguyên nhân:** Dùng **API Token** nhưng quên chưa cấp quyền cho chính cái Token đó (do tính năng *Privilege Separation*).
@@ -263,5 +263,4 @@ Khi không còn nhu cầu xài nữa, ta chỉ cần chạy lệnh `terraform de
 
 ## Tổng kết
 
-Hy vọng bài viết này giúp các bạn tự tin hơn trên con đường IaC.
-
+Vậy là bạn đã biết cách khởi tạo máy ảo trên hạ tầng on-premise thông qua Proxmox. Hy vọng bài viết này sẽ góp thêm phần tự tin của bạn trên hành trình **IaC**
