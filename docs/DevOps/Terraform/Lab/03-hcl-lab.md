@@ -127,14 +127,9 @@ resource "google_compute_instance" "web_server" {
   }
 
   # Script cài Web Server
-  metadata_startup_script = <<-EOF
-    #!/bin/bash
-    apt-get update
-    apt-get install -y nginx
-    echo "<h1>Deployed via Terraform (Single File)</h1><p>Env: ${var.project_config.env}</p>" > /var/www/html/index.html
-    systemctl enable nginx
-    systemctl start nginx
-  EOF
+  metadata_startup_script = templatefile("${path.module}/install_nginx.sh", {
+    env_name = var.project_config.env
+  })
 }
 
 # --- OUTPUTS (KẾT QUẢ) ---
