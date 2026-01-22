@@ -52,7 +52,7 @@ Hybrid-Cloud không đơn thuần là việc "vứt" mỗi thứ một nơi. Đ�
 
 2. **GitOps:**
 
-**ArgoCD** (được cài ở cả Cloud và On-premise) sẽ "soi" Manifest tương ứng để đồng bộ cấu hình lên K8s.
+**ArgoCD** (được cài ở On-premise) sẽ "soi" Manifest tương ứng để đồng bộ cấu hình lên K8s.
 
 ![GitOps](./images/overview/image-4.png)
 

@@ -132,4 +132,4 @@ Cách này chỉ dùng cho mục đích bài lab, không nên sử dụng trong 
 Sau khi cấu hình xong, phần `credentials` của `Hybrid cloud` sẽ như hình
 ![domain creds](./images/day08/image-8.png)
 
-Ở bài tiếp theo, ta sẽ sử dụng credential để kết nối Gitlab một cách chuẩn chỉnh.
+Ở [bài tiếp theo](./09-ConnectJenkinsWithGitlab.md), ta sẽ sử dụng credential để kết nối Gitlab một cách chuẩn chỉnh.
