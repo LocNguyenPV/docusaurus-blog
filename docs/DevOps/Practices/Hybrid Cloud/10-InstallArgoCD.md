@@ -50,24 +50,21 @@ rm argocd-linux-amd64
 
 ```bash
 kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "NodePort"}}'
-
 ```
 
 Kiểm tra port vừa được gán (ví dụ `30080`):
 
 ```bash
 kubectl get svc argocd-server -n argocd
-
 ```
+
+![alt text](image.png)
 
 **Bước 1.4: Lấy mật khẩu đăng nhập ban đầu**
 
 ```bash
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo
-
 ```
-
-_(User mặc định là `admin`)_.
 
 ---
 
@@ -75,15 +72,16 @@ _(User mặc định là `admin`)_.
 
 Đây là bước các bạn mới rất hay gặp lỗi `502 Bad Gateway`.
 
-1. Truy cập Nginx Proxy Manager (`proxy.codebyluke.io.vn`).
+1. Truy cập Nginx Proxy Manager.
 2. Tạo **Proxy Host** mới:
 
 - **Domain Names:** `argocd.codebyluke.io.vn`.
 - **Forward IP:** IP của máy VM On-premise (`34.70.xx.xx`).
 - **Forward Port:** `30080` (Port NodePort lấy ở bước 1.3).
 - **Scheme:** ⚠️ **HTTPS** (Bắt buộc! Vì ArgoCD server tự chạy SSL).
+- **Tab SSL:** Request chứng chỉ Let's Encrypt mới & Force SSL.
 
-3. **Tab SSL:** Request chứng chỉ Let's Encrypt mới & Force SSL.
+![alt text](image-1.png)
 
 ---
 
@@ -97,11 +95,18 @@ ArgoCD cần quyền đọc repo `ecommerce-manifest` của bạn.
 
 - **Type:** `Git`.
 - **Project:** `default`.
-- **Repository URL:** `http://git.codebyluke.io.vn/hybrid-cloud/ecommerce-manifest.git`
+- **Repository URL:** `http://git.codebyluke.io.vn/hybrid-cloud/ecommerce-manifest.git` (Manifest repository)
 - **Username:** `git`.
 - **Password:** Dùng chính cái **PAT** (Token) bạn đã tạo ở bài Jenkins.
 
 4. Nhấn **Connect**. Nếu hiện trạng thái **Successful** màu xanh là OK.
+   ![alt text](image-2.png)
+
+:::tip[Best Practice]
+
+Ở bước này, để tách biệt thì ta có thể tạo một **PAT** riêng biệt cho ArgoCD, chỉ cần quyền `read_api` vì ArgoCD không cần update gì file manifest cả
+
+:::
 
 ---
 
@@ -115,17 +120,19 @@ Trên máy `devops-vm` (nơi cài ArgoCD CLI), hãy login vào GKE:
 ```bash
 # Lấy credentials GKE về máy
 gcloud container clusters get-credentials <TEN_CLUSTER_GKE> --region <REGION> --project <PROJECT_ID>
-
 ```
 
 **Bước 4.2: Đổi tên Context (Best Practice)**
 Tên context mặc định của GKE rất dài, hãy đổi lại cho dễ quản lý:
 
 ```bash
+# Lấy tên context
+kubectl config get-contexts
+
 # Đổi tên context GKE thành 'gke-cloud'
 kubectl config rename-context <CONTEXT_GKE_DAI_NGOANG> gke-cloud
 
-# Đổi tên context K3s hiện tại thành 'on-prem-local'
+# Đổi tên context K8s hiện tại thành 'on-prem-local'
 kubectl config rename-context default on-prem-local
 
 ```
@@ -139,7 +146,6 @@ argocd login argocd.codebyluke.io.vn
 
 # Add cụm GKE
 argocd cluster add gke-cloud
-
 ```
 
 _Lệnh này sẽ tự động tạo ServiceAccount trên GKE để ArgoCD có quyền điều khiển._
