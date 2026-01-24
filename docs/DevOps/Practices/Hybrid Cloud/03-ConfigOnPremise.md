@@ -10,8 +10,26 @@ Trong thực tế, không phải ai cũng có sẵn một dàn Server vật lý 
 
 - **Cấu hình tối ưu (Cost Saving):** Để chạy mượt Jenkins, GitLab, Harbor và K8s cùng lúc, mình khuyến nghị dùng dòng **e2-standard-4** (4 vCPU, 16 GB RAM).
 
-:::tip
-**Mẹo:** Hãy dùng **Spot VM** để tiết kiệm tới 70% chi phí.
+![Config VM](./images/day03/image-2.png)
+
+- **Hệ điều hành và lưu trữ:** Ở đây ta sẽ sử dụng **Ubuntu 25.10 Minimal** và **100 GB** lưu trữ (trong thực tế, ta sẽ cần cấu hình một bộ nhớ lớn hơn để chứa image của Harbor sau này)
+
+![Operation and Storage](./images/day03/image-3.png)
+
+- **Network:** Ta sẽ cần check `Allow HTTP/HTTPS traffic` để chạy install package, ngoài ra sẽ thêm một `custom tag` (ở đây là `devops-tag`) để sau này sử dụng
+
+![Network](./images/day03/image-3.png)
+
+- **Security:** Vì sau này ta sẽ quản lý `manifest` trên GKE và On-Premise bằng ArgoCD (được cài ở VM này) nên ta cần check `Allow full access to all Cloud APIs` để ArgoCD có thể thêm GKE thành cluster
+
+![security](./images/day03/image-5.png)
+
+:::tip[Mẹo]
+Với mục đích làm lab thì ở bước cấu hình HĐH ta có thể dùng **Spot VM** để tiết kiệm tới 70% chi phí 
+  > Tính năng này cho phép ta thuê lại những resource đang rảnh của Google với giá rẻ nhưng Google có thể thu hồi bất cứ lúc nào, ta vẫn có thể start lại service nhưng dữ liệu có thể bị mất => phù hợp với stateless app hoặc ci-cd pipeline
+
+Ngoài ra, ta nên cấu hình `static external IP` ở bước network, nếu không có thì sau mỗi lần bật/tắt sẽ bị đổi IP
+![External IP static](./images/day03/image-4.png)
 :::
 
 ## 2. Thiết lập không gian làm việc
