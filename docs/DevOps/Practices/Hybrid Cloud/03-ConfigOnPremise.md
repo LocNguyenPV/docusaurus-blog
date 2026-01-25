@@ -34,13 +34,37 @@ Ngoài ra, ta nên cấu hình `static external IP` ở bước network, nếu k
 
 ## 2. Thiết lập không gian làm việc
 
+### Kết nối với máy local
+Ở đây, ta sẽ sử dụng SSH client là **MobaXterm** ([link](https://mobaxterm.mobatek.net)) để kết nối với VM trên GCP.
+
+1. Trước tiên, ta cần phải tạo `SSH key` ở máy local, mở `cmd` và chạy câu lệnh:
+
+```bash
+ssh-keygen -t ed25519 -C "devops" -f "path-to-your-folder"
+# passpharse có thể để trống
+```
+![generate ssh](./images/day03/image-7.png)
+
+2. Truy cập vào đường dẫn bạn vừa tạo `SSH key`, mở file có đuôi `.pub` và copy nội dung.
+3. Truy cập vào Metadata trên GCP để thêm `public key`
+![add ssh key](./images/day03/image-8.png)
+
+4. Tạo `session` mới trên **MobaXterm** với cấu hình sau:
+  - **Remote host:** `devops@<vm-external-ip>`
+  - Chọn **Use private key** và trỏ đến file `private key` tương ứng.
+
+![Create session](./images/day03/image-9.png)
+
+Kiểm tra kết nối
+![check connection](./images/day03/image-10.png)
+
+## 3. Cài đặt DevOps Stack (Docker Compose)
+
 Tạo thư mục quản lý tập trung trên máy `devops-vm`:
 
 ```bash
 mkdir ~/devops-stack && cd ~/devops-stack
 ```
-
-## 3. Cài đặt DevOps Stack (Docker Compose)
 
 Trước tiên, chúng ta cần tạo 1 file docker riêng cho **Jenkins** vì cần phải cài đặt Docker và Google Cloud CLI vào trong Jenkins để phục vụ việc build và push image to Artifact Registry sau này
 
