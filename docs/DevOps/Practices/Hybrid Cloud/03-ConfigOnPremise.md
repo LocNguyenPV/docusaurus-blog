@@ -25,8 +25,9 @@ Trong thực tế, không phải ai cũng có sẵn một dàn Server vật lý 
 ![security](./images/day03/image-5.png)
 
 :::tip[Mẹo]
-Với mục đích làm lab thì ở bước cấu hình HĐH ta có thể dùng **Spot VM** để tiết kiệm tới 70% chi phí 
-  > Tính năng này cho phép ta thuê lại những resource đang rảnh của Google với giá rẻ nhưng Google có thể thu hồi bất cứ lúc nào, ta vẫn có thể start lại service nhưng dữ liệu có thể bị mất => phù hợp với stateless app hoặc ci-cd pipeline
+Với mục đích làm lab thì ở bước cấu hình HĐH ta có thể dùng **Spot VM** để tiết kiệm tới 70% chi phí
+
+> Tính năng này cho phép ta thuê lại những resource đang rảnh của Google với giá rẻ nhưng Google có thể thu hồi bất cứ lúc nào, ta vẫn có thể start lại service nhưng dữ liệu có thể bị mất => phù hợp với stateless app hoặc ci-cd pipeline
 
 Ngoài ra, ta nên cấu hình `static external IP` ở bước network, nếu không có thì sau mỗi lần bật/tắt sẽ bị đổi IP
 ![External IP static](./images/day03/image-4.png)
@@ -35,6 +36,7 @@ Ngoài ra, ta nên cấu hình `static external IP` ở bước network, nếu k
 ## 2. Thiết lập không gian làm việc
 
 ### Kết nối với máy local
+
 Ở đây, ta sẽ sử dụng SSH client là **MobaXterm** ([link](https://mobaxterm.mobatek.net)) để kết nối với VM trên GCP.
 
 1. Trước tiên, ta cần phải tạo `SSH key` ở máy local, mở `cmd` và chạy câu lệnh:
@@ -43,35 +45,102 @@ Ngoài ra, ta nên cấu hình `static external IP` ở bước network, nếu k
 ssh-keygen -t ed25519 -C "devops" -f "path-to-your-folder"
 # passpharse có thể để trống
 ```
+
 ![generate ssh](./images/day03/image-7.png)
 
 2. Truy cập vào đường dẫn bạn vừa tạo `SSH key`, mở file có đuôi `.pub` và copy nội dung.
 3. Truy cập vào Metadata trên GCP để thêm `public key`
-![add ssh key](./images/day03/image-8.png)
+   ![add ssh key](./images/day03/image-8.png)
 
 4. Tạo `session` mới trên **MobaXterm** với cấu hình sau:
-  - **Remote host:** `devops@<vm-external-ip>`
-  - Chọn **Use private key** và trỏ đến file `private key` tương ứng.
+
+- **Remote host:** `devops@<vm-external-ip>`
+- Chọn **Use private key** và trỏ đến file `private key` tương ứng.
 
 ![Create session](./images/day03/image-9.png)
 
 Kiểm tra kết nối
 ![check connection](./images/day03/image-10.png)
 
-## 3. Cài đặt DevOps Stack (Docker Compose)
+## 3. Cài đặt Harbor (Private Registry)
 
-Tạo thư mục quản lý tập trung trên máy `devops-vm`:
+Harbor không chỉ là nơi lưu trữ Image, nó còn tích hợp quét lỗ hổng bảo mật (Vulnerability Scanning). Vì Harbor khá nặng, chúng ta sẽ cài đặt nó theo dạng **Offline Installer** để đảm bảo tính ổn định.
+
+**Bước 3.1: Tải và giải nén Harbor**
 
 ```bash
-mkdir ~/devops-stack && cd ~/devops-stack
+# Tạo thư mục quản lý tập trung
+mkdir ~/devops-stack && cd devops-stack
+# Truy cập trang Release của Harbor trên Github để lấy bản mới nhất
+wget https://github.com/goharbor/harbor/releases/download/v2.10.0/harbor-offline-installer-v2.10.0.tgz
+tar xvzf harbor-offline-installer-v2.10.0.tgz
+cd harbor
 ```
+
+**Bước 3.2: Cấu hình file `harbor.yml`**
+Copy file mẫu và chỉnh sửa:
+
+```bash
+grep -v "^[[:space:]]*#" harbor.yml.tmpl | grep -v "^$" > harbor.yml
+nano harbor.yml
+```
+
+Các thông số **bắt buộc** cần sửa:
+
+- **hostname:** Điền IP của máy ảo.
+- **http/port:** Mặc định là 80. Nếu bạn đã dùng port 80 cho Nginx Proxy Manager, hãy đổi port Harbor thành `8083`.
+- **external_url:** Tên miền của bạn (VD: <u>registry.codebyluke.io.vn</u>) - Harbor sẽ hiểu rằng mọi request trả về cho client phải dùng domain này thay vì IP.
+- **https:** Nếu bạn định cấu hình SSL qua Nginx Proxy Manager (NPM), bạn có thể **comment (vô hiệu hóa)** toàn bộ phần https trong file này để NPM lo phần chứng chỉ.
+- **harbor_admin_password:** Đặt mật khẩu quản trị cho bạn.
+
+**Bước 3.3: Chạy Script cài đặt**
+Nếu bạn muốn cài thêm tính năng quét bảo mật (Trivy), hãy thêm flag `--with-trivy`:
+
+```bash
+sudo ./install.sh --with-trivy
+```
+
+Sau khi chạy xong, Harbor sẽ khởi chạy một loạt container. Bạn có thể kiểm tra bằng lệnh `docker ps`.
+
+![alt text](./images/day03/image-1.png)
+
+:::note[Cài đặt thư viện]
+
+- Nếu bạn gặp lỗi `docker not found`, là do bạn chưa cài đặt Docker. Bạn có thể tham khảo [ở đây](../../Docker/linux-installation.md)
+
+- Nếu bạn gặp thông báo `nano not found`, đây là do bạn chưa cài đặt thư viện, chạy câu lệnh sau để cài đặt:
+
+```bash
+sudo apt-get update && sudo apt-get install nano -y
+```
+
+:::
+
+**Bước 3.4: Cấu hình "Insecure Registries" (Quan trọng)**
+Vì mặc định Docker yêu cầu HTTPS, nếu bạn dùng HTTP cho Harbor, bạn phải báo cho Docker biết:
+
+```bash
+sudo nano /etc/docker/daemon.json
+# Thêm dòng sau:
+{
+  "insecure-registries" : ["<hostname của harbor đã config ở trên>"]
+}
+# Sau đó restart docker
+sudo systemctl restart docker
+
+```
+
+---
+
+## 4. Cài đặt DevOps Stack (Docker Compose)
 
 Trước tiên, chúng ta cần tạo 1 file docker riêng cho **Jenkins** vì cần phải cài đặt Docker và Google Cloud CLI vào trong Jenkins để phục vụ việc build và push image to Artifact Registry sau này
 
 ```bash
-mkdir ~/jenkins
+mkdir ~/jenkins && cd jenkins
 sudo nano Dockerfile
 ```
+
 Copy và dán vào `Dockerfile`
 
 ```Dockerfile
@@ -93,7 +162,7 @@ RUN curl -fsSLo /usr/share/keyrings/docker-archive-keyring.asc \
     https://download.docker.com/linux/debian $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list \
     && apt-get update && apt-get install -y docker-ce-cli
 
-# 3. Install GCI 
+# 3. Install GCI
 RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | \
     tee -a /etc/apt/sources.list.d/google-cloud-sdk.list \
     && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | \
@@ -106,7 +175,14 @@ RUN rm -rf /var/lib/apt/lists/*
 USER jenkins
 ```
 
-Trở về lại thư mục `devops-stack`, tạo file `docker-compose.yml` để quản lý Jenkins, GitLab và Nginx Proxy Manager (NPM). 
+Trở về lại thư mục `devops-stack`, tạo file `docker-compose.yml` để quản lý Jenkins, GitLab và Nginx Proxy Manager (NPM).
+
+```bash
+cd ..
+sudo nano docker-compose.yml
+```
+
+Copy và dán vào `docker-compose.yml`
 
 ```yaml
 services:
@@ -184,72 +260,15 @@ networks:
     name: harbor_harbor
 ```
 
-:::tip[Tại sao lại sử dụng NPM]
-Việc dùng NPM giúp chúng ta cấu hình Domain và SSL cho Harbor/GitLab cực kỳ dễ dàng sau này.
-:::
+Sau đó chạy `docker compose up -d` để cài đặt images
 
-
----
-
-## 4. Cài đặt Harbor (Private Registry)
-
-Harbor không chỉ là nơi lưu trữ Image, nó còn tích hợp quét lỗ hổng bảo mật (Vulnerability Scanning). Vì Harbor khá nặng, chúng ta sẽ cài đặt nó theo dạng **Offline Installer** để đảm bảo tính ổn định.
-
-**Bước 4.1: Tải và giải nén Harbor**
-
-```bash
-# Truy cập trang Release của Harbor trên Github để lấy bản mới nhất
-wget https://github.com/goharbor/harbor/releases/download/v2.10.0/harbor-offline-installer-v2.10.0.tgz
-tar xvzf harbor-offline-installer-v2.10.0.tgz
-cd harbor
-```
-
-**Bước 4.2: Cấu hình file `harbor.yml`**
-Copy file mẫu và chỉnh sửa:
-
-```bash
-cp harbor.yml.tmpl harbor.yml
-nano harbor.yml
-```
-
-Các thông số **bắt buộc** cần sửa:
-
-- **hostname:** Điền IP của máy ảo.
-- **http/port:** Mặc định là 80. Nếu bạn đã dùng port 80 cho Nginx Proxy Manager, hãy đổi port Harbor thành `8083`.
-- **external_url:** Tên miền của bạn (VD: <u>registry.codebyluke.io.vn</u>) - Harbor sẽ hiểu rằng mọi request trả về cho client phải dùng domain này thay vì IP.
-- **https:** Nếu bạn định cấu hình SSL qua Nginx Proxy Manager (NPM), bạn có thể **comment (vô hiệu hóa)** toàn bộ phần https trong file này để NPM lo phần chứng chỉ.
-- **harbor_admin_password:** Đặt mật khẩu quản trị cho bạn.
-
-**Bước 4.3: Chạy Script cài đặt**
-Nếu bạn muốn cài thêm tính năng quét bảo mật (Trivy), hãy thêm flag `--with-trivy`:
-
-```bash
-sudo ./install.sh --with-trivy
-```
-
-Sau khi chạy xong, Harbor sẽ khởi chạy một loạt container. Bạn có thể kiểm tra bằng lệnh `docker ps`.
-
-![alt text](./images/day03/image-1.png)
-
-**Bước 4.4: Cấu hình "Insecure Registries" (Quan trọng)**
-Vì mặc định Docker yêu cầu HTTPS, nếu bạn dùng HTTP cho Harbor, bạn phải báo cho Docker biết:
-
-```bash
-sudo nano /etc/docker/daemon.json
-# Thêm dòng sau:
-{
-  "insecure-registries" : ["<hostname của harbor đã config ở trên>"]
-}
-# Sau đó restart docker
-sudo systemctl restart docker
-
-```
+![run docker compose](./images/day03/image-11.png)
 
 ---
 
 ## 5. Cài đặt cụm K8s On-premise (1 Master - 2 Worker)
 
-Xem lại [link](https://blog.codebyluke.io.vn/docs/DevOps/Kubernetes/deploy_onpremis)
+Xem lại [link](../../Kubernetes/deploy_onpremis.md)
 
 ## 6. Cấu hình Firewall & Network
 
