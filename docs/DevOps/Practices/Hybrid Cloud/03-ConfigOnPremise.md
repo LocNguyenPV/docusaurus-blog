@@ -18,11 +18,11 @@ Trong thực tế, không phải ai cũng có sẵn một dàn Server vật lý 
 
 - **Network:** Ta sẽ cần check `Allow HTTP/HTTPS traffic` để chạy install package, ngoài ra sẽ thêm một `custom tag` (ở đây là `devops-tag`) để sau này sử dụng
 
-![Network](./images/day03/image-3.png)
+![Network](./images/day03/image-4.png)
 
 - **Security:** Vì sau này ta sẽ quản lý `manifest` trên GKE và On-Premise bằng ArgoCD (được cài ở VM này) nên ta cần check `Allow full access to all Cloud APIs` để ArgoCD có thể thêm GKE thành cluster
 
-![security](./images/day03/image-5.png)
+![security](./images/day03/image-6.png)
 
 :::tip[Mẹo]
 Với mục đích làm lab thì ở bước cấu hình HĐH ta có thể dùng **Spot VM** để tiết kiệm tới 70% chi phí
@@ -30,7 +30,7 @@ Với mục đích làm lab thì ở bước cấu hình HĐH ta có thể dùng
 > Tính năng này cho phép ta thuê lại những resource đang rảnh của Google với giá rẻ nhưng Google có thể thu hồi bất cứ lúc nào, ta vẫn có thể start lại service nhưng dữ liệu có thể bị mất => phù hợp với stateless app hoặc ci-cd pipeline
 
 Ngoài ra, ta nên cấu hình `static external IP` ở bước network, nếu không có thì sau mỗi lần bật/tắt sẽ bị đổi IP
-![External IP static](./images/day03/image-4.png)
+![External IP static](./images/day03/image-5.png)
 :::
 
 ## 2. Thiết lập không gian làm việc
@@ -89,9 +89,62 @@ Các thông số **bắt buộc** cần sửa:
 
 - **hostname:** Điền IP của máy ảo.
 - **http/port:** Mặc định là 80. Nếu bạn đã dùng port 80 cho Nginx Proxy Manager, hãy đổi port Harbor thành `8083`.
-- **external_url:** Tên miền của bạn (VD: <u>registry.codebyluke.io.vn</u>) - Harbor sẽ hiểu rằng mọi request trả về cho client phải dùng domain này thay vì IP.
-- **https:** Nếu bạn định cấu hình SSL qua Nginx Proxy Manager (NPM), bạn có thể **comment (vô hiệu hóa)** toàn bộ phần https trong file này để NPM lo phần chứng chỉ.
+- **external_url (thêm vào sau section http):** Tên miền của bạn (VD: <u>registry.codebyluke.io.vn</u>) - Harbor sẽ hiểu rằng mọi request trả về cho client phải dùng domain này thay vì IP.
+- **https:** Nginx Proxy Manager (NPM) sẽ lo phần chứng chỉ nên ta có thể **comment (vô hiệu hóa)** toàn bộ phần https
 - **harbor_admin_password:** Đặt mật khẩu quản trị cho bạn.
+
+```yaml
+hostname: <YOUR-EXTERNAL-IP>
+http:
+  port: 8083
+external_url: https://<your-domain-name>
+harbor_admin_password: Harbor12345
+database:
+  password: root123
+  max_idle_conns: 100
+  max_open_conns: 900
+  conn_max_lifetime: 5m
+  conn_max_idle_time: 0
+data_volume: /data
+trivy:
+  ignore_unfixed: false
+  skip_update: false
+  offline_scan: false
+  security_check: vuln
+  insecure: false
+jobservice:
+  max_job_workers: 10
+  job_loggers:
+    - STD_OUTPUT
+    - FILE
+  logger_sweeper_duration: 1 #days
+notification:
+  webhook_job_max_retry: 3
+  webhook_job_http_client_timeout: 3 #seconds
+log:
+  level: info
+  local:
+    rotate_count: 50
+    rotate_size: 200M
+    location: /var/log/harbor
+_version: 2.10.0
+proxy:
+  http_proxy:
+  https_proxy:
+  no_proxy:
+  components:
+    - core
+    - jobservice
+    - trivy
+upload_purging:
+  enabled: true
+  age: 168h
+  interval: 24h
+  dryrun: false
+cache:
+  enabled: false
+  expire_hours: 24
+```
 
 **Bước 3.3: Chạy Script cài đặt**
 Nếu bạn muốn cài thêm tính năng quét bảo mật (Trivy), hãy thêm flag `--with-trivy`:
@@ -99,10 +152,9 @@ Nếu bạn muốn cài thêm tính năng quét bảo mật (Trivy), hãy thêm 
 ```bash
 sudo ./install.sh --with-trivy
 ```
+![alt text](./images/day03/image-12.png)
 
-Sau khi chạy xong, Harbor sẽ khởi chạy một loạt container. Bạn có thể kiểm tra bằng lệnh `docker ps`.
 
-![alt text](./images/day03/image-1.png)
 
 :::note[Cài đặt thư viện]
 
@@ -264,11 +316,50 @@ Sau đó chạy `docker compose up -d` để cài đặt images
 
 ![run docker compose](./images/day03/image-11.png)
 
+Kiểm tra bằng lệnh `docker ps` để chắc rằng các images (Harbor, Jenkins, Uptime kuma, etc) đều chạy
+
+![alt text](./images/day03/image-1.png)
+
+
 ---
 
 ## 5. Cài đặt cụm K8s On-premise (1 Master - 2 Worker)
 
-Xem lại [link](../../Kubernetes/deploy_onpremis.md)
+Ta sẽ sử dụng lại VM chạy docker làm máy **master** và phải tạo thêm 2 máy **worker** với cấu hình như sau
+
+
+- **Cấu hình hạ tầng:** Vì đây là máy worker nên cấu hình sẽ thấp hơn so với máy master, ở đây ta s4 chọn **e2-standard-2** (2 vCPU, 8 GB RAM).
+![alt text](./images/day03/image-13.png)
+
+- **Hệ điều hành và lưu trữ:** Ở đây ta sẽ sử dụng HĐH như master là **Ubuntu 25.10 Minimal**, nhưng storage chỉ là **50GB**
+
+![alt text](./images/day03/image-14.png)
+
+- **Network:** Check `Allow HTTP/HTTPS traffic` 
+
+![alt text](./images/day03/image-15.png)
+
+
+:::danger[Set external IP static]
+
+Mặc định khi tạo VM trên GCP, cả Internal/External IP đều là Dynamic (Ephemeral - Tạm thời). Tuy nhiên, cơ chế thay đổi của 2 cái là khác nhau:
+
+  - **External:** Thay đổi khi bạn STOP/DELETE máy ảo
+  - **Internal:** Chỉ thay đổi khi bạn DELETE
+
+Do là môi trường lab, nên khi làm xong một phần, ta có thể tắt máy ảo (giảm thiểu chi phí) để bữa sau làm tiếp => cần phải thay đổi **External IP** thành **static**. Bước làm như sau:
+
+1) Vào menu **VPC Network** -> **IP addresses**.
+2) Bạn sẽ thấy dòng IP External của máy VM đang có Type là Ephemeral.
+3) Bấm vào dấu 3 chấm ở cuối dòng -> Chọn **Promote to static IP address**.
+4) Đặt một cái tên (ví dụ: `devops-vm-ip`) -> Bấm Reserve.
+
+![alt text](./images/day03/image-16.png)
+
+:::
+
+Sau khi tạo xong 2 máy **worker**, ta sẽ làm theo [bài viết](../../Kubernetes/deploy_onpremis.md#4-turn-off-swap) để cài đặt cụm **K8s on-premise**
+
 
 ## 6. Cấu hình Firewall & Network
 
@@ -278,6 +369,31 @@ Ta cần mở các port sau trên Google Cloud Firewall:
 - **81:** UI quản lý của Nginx Proxy Manager.
 - **222**: Gitlab SSH
 - **30000-32767:** Dải port dành cho NodePort của Kubernetes.
+
+Cách làm:
+1) Truy cập **Firewall** trong VPC để tạo
+
+![create firewall](./images/day03/image-17.png)
+
+2) Chọn những thông số sau
+  - **Direct of traffic:** `Ingress`
+  - **Allow on match:** `Allow`
+  - **Source IPV4 ranges:** `0.0.0.0` (cấu hình này cho phép mọi ip có thể truy cập được)
+  - **Targets:** `Specified target tags` -> **Target tags:** Điền `devops-tag` hoặc tag custom bạn tạo ở [phần trên](#1-tại-sao-lại-dùng-compute-engine-giả-lập-on-premise)
+
+![create firewall info](./images/day03/image-18.png)
+
+  - **Protocol and ports:** `Specified protocols and ports` -> Chọn **TCP** và điền những port cần mở
+
+![create firewall port](./images/day03/image-19.png)
+
+:::danger[Allow all firewall]
+**TUYỆT ĐỐI KHÔNG CHỌN ALLOW ALL TRONG MÔI TRƯỜNG PRODUCTION**
+
+Ở môi trường lab hoặc trong trường hợp chưa xác định được những port nào cần mở thì bạn có thể chọn **Allow all** nhưng nên setup lại khi đã khoanh vùng được ports
+
+:::
+
 
 ---
 

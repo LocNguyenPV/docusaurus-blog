@@ -1,4 +1,4 @@
-# Bài 8: GitOps - ArgoCD và quản lý đa cụm
+# Bài 10: GitOps - ArgoCD và quản lý đa cụm
 
 Sau chuỗi bài về CI (Continuous Integration) với Jenkins, chúng ta đã có Container Image nằm gọn trong Harbor. Giờ là lúc đưa ứng dụng "lên sóng" (CD - Continuous Delivery).
 
