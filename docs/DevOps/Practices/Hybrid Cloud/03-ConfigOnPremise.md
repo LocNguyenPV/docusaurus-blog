@@ -152,9 +152,8 @@ Nếu bạn muốn cài thêm tính năng quét bảo mật (Trivy), hãy thêm 
 ```bash
 sudo ./install.sh --with-trivy
 ```
+
 ![alt text](./images/day03/image-12.png)
-
-
 
 :::note[Cài đặt thư viện]
 
@@ -320,46 +319,42 @@ Kiểm tra bằng lệnh `docker ps` để chắc rằng các images (Harbor, Je
 
 ![alt text](./images/day03/image-1.png)
 
-
 ---
 
 ## 5. Cài đặt cụm K8s On-premise (1 Master - 2 Worker)
 
 Ta sẽ sử dụng lại VM chạy docker làm máy **master** và phải tạo thêm 2 máy **worker** với cấu hình như sau
 
-
 - **Cấu hình hạ tầng:** Vì đây là máy worker nên cấu hình sẽ thấp hơn so với máy master, ở đây ta s4 chọn **e2-standard-2** (2 vCPU, 8 GB RAM).
-![alt text](./images/day03/image-13.png)
+  ![alt text](./images/day03/image-13.png)
 
 - **Hệ điều hành và lưu trữ:** Ở đây ta sẽ sử dụng HĐH như master là **Ubuntu 25.10 Minimal**, nhưng storage chỉ là **50GB**
 
 ![alt text](./images/day03/image-14.png)
 
-- **Network:** Check `Allow HTTP/HTTPS traffic` 
+- **Network:** Check `Allow HTTP/HTTPS traffic`
 
 ![alt text](./images/day03/image-15.png)
-
 
 :::danger[Set external IP static]
 
 Mặc định khi tạo VM trên GCP, cả Internal/External IP đều là Dynamic (Ephemeral - Tạm thời). Tuy nhiên, cơ chế thay đổi của 2 cái là khác nhau:
 
-  - **External:** Thay đổi khi bạn STOP/DELETE máy ảo
-  - **Internal:** Chỉ thay đổi khi bạn DELETE
+- **External:** Thay đổi khi bạn STOP/DELETE máy ảo
+- **Internal:** Chỉ thay đổi khi bạn DELETE
 
 Do là môi trường lab, nên khi làm xong một phần, ta có thể tắt máy ảo (giảm thiểu chi phí) để bữa sau làm tiếp => cần phải thay đổi **External IP** thành **static**. Bước làm như sau:
 
-1) Vào menu **VPC Network** -> **IP addresses**.
-2) Bạn sẽ thấy dòng IP External của máy VM đang có Type là Ephemeral.
-3) Bấm vào dấu 3 chấm ở cuối dòng -> Chọn **Promote to static IP address**.
-4) Đặt một cái tên (ví dụ: `devops-vm-ip`) -> Bấm Reserve.
+1. Vào menu **VPC Network** -> **IP addresses**.
+2. Bạn sẽ thấy dòng IP External của máy VM đang có Type là Ephemeral.
+3. Bấm vào dấu 3 chấm ở cuối dòng -> Chọn **Promote to static IP address**.
+4. Đặt một cái tên (ví dụ: `devops-vm-ip`) -> Bấm Reserve.
 
 ![alt text](./images/day03/image-16.png)
 
 :::
 
 Sau khi tạo xong 2 máy **worker**, ta sẽ làm theo [bài viết](../../Kubernetes/deploy_onpremis.md#4-turn-off-swap) để cài đặt cụm **K8s on-premise**
-
 
 ## 6. Cấu hình Firewall & Network
 
@@ -371,19 +366,21 @@ Ta cần mở các port sau trên Google Cloud Firewall:
 - **30000-32767:** Dải port dành cho NodePort của Kubernetes.
 
 Cách làm:
-1) Truy cập **Firewall** trong VPC để tạo
+
+1. Truy cập **Firewall** trong VPC để tạo
 
 ![create firewall](./images/day03/image-17.png)
 
-2) Chọn những thông số sau
-  - **Direct of traffic:** `Ingress`
-  - **Allow on match:** `Allow`
-  - **Source IPV4 ranges:** `0.0.0.0` (cấu hình này cho phép mọi ip có thể truy cập được)
-  - **Targets:** `Specified target tags` -> **Target tags:** Điền `devops-tag` hoặc tag custom bạn tạo ở [phần trên](#1-tại-sao-lại-dùng-compute-engine-giả-lập-on-premise)
+2. Chọn những thông số sau
+
+- **Direct of traffic:** `Ingress`
+- **Allow on match:** `Allow`
+- **Source IPV4 ranges:** `0.0.0.0/0` (cấu hình này cho phép mọi ip có thể truy cập được)
+- **Targets:** `Specified target tags` -> **Target tags:** Điền `devops-tag` hoặc tag custom bạn tạo ở [phần trên](#1-tại-sao-lại-dùng-compute-engine-giả-lập-on-premise)
 
 ![create firewall info](./images/day03/image-18.png)
 
-  - **Protocol and ports:** `Specified protocols and ports` -> Chọn **TCP** và điền những port cần mở
+- **Protocol and ports:** `Specified protocols and ports` -> Chọn **TCP** và điền những port cần mở
 
 ![create firewall port](./images/day03/image-19.png)
 
@@ -393,7 +390,6 @@ Cách làm:
 Ở môi trường lab hoặc trong trường hợp chưa xác định được những port nào cần mở thì bạn có thể chọn **Allow all** nhưng nên setup lại khi đã khoanh vùng được ports
 
 :::
-
 
 ---
 
