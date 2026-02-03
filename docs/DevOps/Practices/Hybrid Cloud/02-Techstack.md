@@ -58,7 +58,7 @@ Việc kết hợp những mảnh ghép này lại với nhau tạo nên một h
 
 ### Kết luận
 
-Lựa chọn xong "vũ khí" là chúng ta đã đi được 50% chặng đường. Ở bài viết tiếp theo, mình sẽ cùng các bạn bắt tay vào cấu hình và xây dựng ở phía **on-premise**.
+Lựa chọn xong "vũ khí" là chúng ta đã đi được 50% chặng đường. Ở [bài viết tiếp theo](03-ConfigOnPremise.md), mình sẽ cùng các bạn bắt tay vào cấu hình và xây dựng ở phía **on-premise**.
 
 Hẹn gặp lại các bạn ở Bài 3!
 

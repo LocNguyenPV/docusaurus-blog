@@ -403,4 +403,4 @@ Xong bài này, chúng ta đã có một "đại bản doanh" đầy đủ vũ k
 - **K8s** sẵn sàng chạy ứng dụng
 - **Uptime Kuma** sẵn sàng giám sát
 
-Ở bài sau, thay vì phải gõ `http://<IP>:<port>` để truy cập services thì chúng ta sẽ cấu hình **Nginx Proxy Manager** để có thể truy cập bằng `domain` một cách chuẩn chỉnh và chuyên nghiệp
+Ở [bài sau](04-ConfigNPM.md), thay vì phải gõ `http://<IP>:<port>` để truy cập services thì chúng ta sẽ cấu hình **Nginx Proxy Manager** để có thể truy cập bằng `domain` một cách chuẩn chỉnh và chuyên nghiệp

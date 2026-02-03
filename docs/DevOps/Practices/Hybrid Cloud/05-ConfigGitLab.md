@@ -15,11 +15,30 @@ Kể từ các phiên bản mới, GitLab không còn cho phép đặt mật kh�
 sudo docker exec -it gitlab grep 'Password:' /etc/gitlab/initial_root_password
 ```
 
-:::tip[Lưu ý quan trọng]
+:::tip[Reset root password]
 
-- **Thời hạn:** File mật khẩu này sẽ tự động bị xóa sau **24 giờ**. Hãy đăng nhập bằng user `root` và đổi mật khẩu cá nhân của bạn ngay lập tức.
-- **Nếu không thấy file:** Nếu bạn chạy lệnh trên mà báo lỗi không tìm thấy file, có thể là do container chưa khởi động xong hoặc bạn đã quá thời hạn 24h. Lúc này, bạn sẽ cần dùng lệnh `gitlab-rake` để reset mật khẩu thủ công (mình sẽ để lệnh dự phòng ở phần Comment nếu bạn nào cần).
-  :::
+- **Lưu ý:** File mật khẩu này sẽ tự động bị xóa sau **24 giờ**. Hãy đăng nhập bằng user `root` và đổi mật khẩu cá nhân của bạn ngay lập tức.
+- **Nếu không thấy file:** Nếu bạn chạy lệnh trên mà báo lỗi không tìm thấy file, có thể là do container chưa khởi động xong hoặc bạn đã quá thời hạn 24h. Lúc này, bạn sẽ cần dùng lệnh `gitlab-rake` để reset mật khẩu thủ công. Cách làm như sau:
+
+1. Truy cập vào VM và chạy lệnh sau để truy cập `gitlab` container
+
+```bash
+# Access gitlab container
+sudo docker exec -it gitlab /bin/bash
+```
+
+2. Chạy câu lệnh sau và chờ một lúc (nhanh hay chậm tùy vào resource của VM)
+
+```bash
+# CD to gitlab folder
+cd /etc/gitlab
+# Reset root password
+gitlab-rake "gitlab:password:reset[root]"
+```
+
+![reset root password](./images/day05/image-4.png)
+
+:::
 
 ---
 
@@ -29,17 +48,25 @@ sudo docker exec -it gitlab grep 'Password:' /etc/gitlab/initial_root_password
 
 ![Group](./images/day05/image.png)
 
-**Tại sao phải tách thành 2 Repository?**
-Trong mô hình GitOps, mình sẽ tạo 2 kho chứa riêng biệt:
+Tiếp theo, ta sẽ tạo 2 `repository` tương ứng:
 
-1. **`ecommerce-app`**: Chứa source code ứng dụng (NodeJS/Python/Java...), Unit Test và quan trọng nhất là `Dockerfile`.
+![gitlab repositories](./images/day09/image.png)
 
-2. **`ecommerce-manifest`**: Chứa các file cấu hình hạ tầng Kubernetes (Deployment, Service, Ingress, ConfigMap...).
+- **Project Repository:** Chứa source code ứng dụng (NodeJS/Python/Java...), Unit Test và quan trọng nhất là `Dockerfile`.
+- **Manifest Repository:** Chứa các file cấu hình hạ tầng Kubernetes (Deployment, Service, Ingress, ConfigMap...).
 
 ![Repositories](./images/day05/image-1.png)
 
-:::tip [Bí mật kỹ thuật]
-Việc tách đôi giúp tránh lỗi "vòng lặp vô tận". Nếu bạn để chung, khi Jenkins build xong và tự động update tag image mới vào file YAML rồi push ngược lại Git, GitLab sẽ lại thấy có thay đổi và kích hoạt Jenkins build tiếp... cứ thế mãi không dừng.
+:::note[Repository demo]
+Với mục đích demo, bạn có thể sử dụng project mẫu sau:
+
+- [Project repository](https://github.com/LocNguyenPV/Ecommerce-badminton)
+- [Manifest repository](https://github.com/LocNguyenPV/hybrid-cloud-manifest)
+
+:::
+
+:::tip[Tại sao phải tách thành 2 Repository?]
+Việc tách đôi giúp tránh lỗi "vòng lặp vô tận". Nếu bạn để chung, khi Jenkins build xong và tự động update tag image mới vào file YAML rồi push ngược lại Git, GitLab sẽ lại thấy có thay đổi và kích hoạt Jenkins build tiếp... cứ thế mãi không dừng. Ngoài ra, nó còn giúp tổ chức code rõ ràng và dễ quản lý.
 :::
 
 ---
@@ -104,4 +131,4 @@ Xong Bài 5, chúng ta đã có một "trạm chỉ huy" GitLab cực kỳ chu�
 
 Ở bài tiếp theo, mình sẽ cùng các bạn cấu hình **Jenkins** – nơi chúng ta sẽ biến những dòng code này thành những Container chạy trên Cloud, kèm theo hệ thống phân quyền QA chuyên nghiệp.
 
-Hẹn gặp lại các bạn ở **Bài 6: Jenkins - Thiết lập "Bộ máy thực thi" và Phân quyền QA!**
+Hẹn gặp lại các bạn ở [**Bài 6: Jenkins - Thiết lập "Bộ máy thực thi" và Phân quyền QA!**](06-ConfigJenkins.md)

@@ -87,6 +87,6 @@ Kết thúc hành trình này, bạn sẽ có trong tay:
 
 ### Kết luận
 
-Hệ thống Hybrid-Cloud không chỉ là một bài Lab, nó là giải pháp cho bài toán kinh tế và kỹ thuật hiện đại. Ở bài viết tiếp theo, mình sẽ đi sâu vào **Phân tích kỹ thuật và lựa chọn công cụ** - tại sao mình lại chọn Jenkins thay vì GitLab CI, hay tại sao Cloudflare lại là "chìa khóa" cho việc điều hướng traffic?
+Hệ thống Hybrid-Cloud không chỉ là một bài Lab, nó là giải pháp cho bài toán kinh tế và kỹ thuật hiện đại. Ở [bài viết sau](02-Techstack.md), mình sẽ đi sâu vào **Phân tích kỹ thuật và lựa chọn công cụ** - tại sao mình lại chọn Jenkins thay vì GitLab CI, hay tại sao Cloudflare lại là "chìa khóa" cho việc điều hướng traffic?
 
 Cùng chờ đón nhé!

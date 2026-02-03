@@ -20,31 +20,6 @@
 
 ![Gitlab integration](./images/day09/image-14.png)
 
-## Khởi tạo Gitlab group và repository
-
-![gitlab repositories](./images/day09/image.png)
-
-Theo như thiết kế ta sẽ có 2 repo trong gitlab như sau:
-
-- **Project:** Chứa source code của dự án
-- **Manifest:** Chứa config của dự án
-
-:::note[Repository demo]
-Với mục đích demo, bạn có thể sử dụng project mẫu sau:
-
-- [Project repository](https://github.com/LocNguyenPV/Ecommerce-badminton)
-- [Manifest repository](https://github.com/LocNguyenPV/hybrid-cloud-manifest)
-
-:::
-
-Cho gần với thực tế hơn, ta sẽ tạo một group `hybrid-cloud` trên Gitlab để chứa 2 `repo` trên
-
-![gitlab group](./images/day09/image-1.png)
-
-Sau khi khởi tạo và import 2 `repo` vào group sẽ như hình
-
-![gitlab group project](./images/day09/image-2.png)
-
 ## Tích hợp Gitlab repository vào Jenkins
 
 Tiếp theo ta sẽ khởi tạo một pipeline trong Jenkins:

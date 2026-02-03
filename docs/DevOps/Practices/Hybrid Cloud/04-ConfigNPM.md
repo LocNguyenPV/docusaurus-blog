@@ -18,7 +18,7 @@ Trước khi cấu hình, chúng ta cần thống nhất sơ đồ ánh xạ t�
 | --------------- | --------------------------- | --------------------------------- |
 | **Jenkins**     | `jenkins.codebyluke.io.vn`  | `jenkins:8081`                    |
 | **GitLab**      | `gitlab.codebyluke.io.vn`   | `gitlab:80`                       |
-| **Harbor**      | `registry.codebyluke.io.vn` | `nginx:80`                        |
+| **Harbor**      | `registry.codebyluke.io.vn` | `nginx:8080`                      |
 | **Uptime Kuma** | `kuma.codebyluke.io.vn`     | `uptime-kuma:3001`                |
 
 ---
@@ -34,126 +34,7 @@ Trước tiên, bạn phải vào trang quản trị Domain và tạo các bản
 
 :::tip[Pro way]
 
-Ở trên là cách làm bằng UI, nếu máy bạn có cài sẵn python thì có thể chạy script dưới đây để lẹ hơn (nhớ thay đổi thông tin)
-
-```python
-import requests
-import json
-import sys
-
-# ====================================================================
-# 1. CẤU HÌNH CHUNG
-# ====================================================================
-
-API_TOKEN="thay_api_token_cua_ban_vao_day" #API cloud flare
-ZONE_ID="thay_zone_id_cua_ban_vao_day" # ZONE ID cloud flare
-DOMAIN="domain_cua_ban"  # Tên miền chính của bạn
-EXTERNAL_IP = "external_ip_vm"
-
-# Danh sách các subdomain cần tạo/update
-SUBDOMAINS = [
-    "argocd",
-    "gitlab",
-    "jenkins",
-    "kuma",
-    "registry"
-]
-
-# Bật đám mây cam (Proxy)? True = Bật, False = Tắt
-PROXIED = True
-
-BASE_URL = "https://api.cloudflare.com/client/v4"
-HEADERS = {
-    "Authorization": f"Bearer {API_TOKEN}",
-    "Content-Type": "application/json"
-}
-
-# ====================================================================
-# 2. HÀM XỬ LÝ (FUNCTION)
-# ====================================================================
-
-def manage_dns_record(subdomain):
-    # Xử lý tên đầy đủ
-    full_record_name = f"{subdomain}.{DOMAIN}"
-
-    print(f"--------------------------------------------------")
-    print(f"📡 Đang xử lý: {full_record_name}")
-
-    # 1. Kiểm tra record đã tồn tại chưa
-    # API: List DNS Records
-    params = {"type": "A", "name": full_record_name}
-    try:
-        resp = requests.get(f"{BASE_URL}/zones/{ZONE_ID}/dns_records", headers=HEADERS, params=params)
-        data = resp.json()
-    except Exception as e:
-        print(f"❌ Lỗi kết nối API Cloudflare: {e}")
-        return
-
-    # Kiểm tra success
-    if not data.get("success"):
-        print(f"❌ Lỗi API: {data.get('errors')}")
-        return
-
-    results = data.get("result", [])
-
-    # Payload chung cho Create/Update
-    record_data = {
-        "type": "A",
-        "name": full_record_name,
-        "content": EXTERNAL_IP,
-        "ttl": 1,  # 1 = Automatic
-        "proxied": PROXIED
-    }
-
-    if not results:
-        # --- TRƯỜNG HỢP 1: TẠO MỚI (CREATE) ---
-        print(f"🆕 Record chưa tồn tại. Đang tạo mới -> {EXTERNAL_IP}...")
-        create_resp = requests.post(
-            f"{BASE_URL}/zones/{ZONE_ID}/dns_records",
-            headers=HEADERS,
-            json=record_data
-        )
-        if create_resp.json().get("success"):
-            print("✅ Đã TẠO thành công!")
-        else:
-            print(f"❌ Tạo thất bại: {create_resp.text}")
-
-    else:
-        # --- TRƯỜNG HỢP 2: CẬP NHẬT (UPDATE) ---
-        record_id = results[0]["id"]
-        existing_ip = results[0]["content"]
-
-        if existing_ip == EXTERNAL_IP:
-            print(f"👌 IP chưa đổi ({existing_ip}). Bỏ qua.")
-        else:
-            print(f"🔄 IP cũ ({existing_ip}) khác IP mới. Đang cập nhật -> {EXTERNAL_IP}...")
-            update_resp = requests.put(
-                f"{BASE_URL}/zones/{ZONE_ID}/dns_records/{record_id}",
-                headers=HEADERS,
-                json=record_data
-            )
-            if update_resp.json().get("success"):
-                print("✅ Đã CẬP NHẬT thành công!")
-            else:
-                print(f"❌ Cập nhật thất bại: {update_resp.text}")
-
-# ====================================================================
-# 3. CHẠY CHƯƠNG TRÌNH
-# ====================================================================
-
-if __name__ == "__main__":
-    # Lấy IP một lần dùng chung cho tất cả
-    print(f"🚀 Bắt đầu đồng bộ DNS Cloudflare")
-    print(f"🌍 IP Public hiện tại: {EXTERNAL_IP}")
-    print(f"📋 Danh sách record: {SUBDOMAINS}")
-
-    for sub in SUBDOMAINS:
-        manage_dns_record(sub)
-
-    print("--------------------------------------------------")
-    print("🎉 Hoàn tất!")
-
-```
+Ở trên là cách làm bằng UI, nếu máy bạn có cài sẵn python thì có thể chạy [script này](https://github.com/LocNguyenPV/hybrid-cloud-manifest/blob/main/cloudflare/create_update_record.py) để lẹ hơn (nhớ thay đổi thông tin)
 
 :::
 
@@ -163,16 +44,18 @@ if __name__ == "__main__":
 2. Chọn **Add Proxy Host**.
 3. **Domain Names:** `your-sub-domain.codebyluke.io.vn`
 4. **Scheme:** `http`
-5. **Forward Hostname:** `container-name` / `internal ip`
-6. **Forward Port:** `service-port`
-7. **Websockets Support:** `On` cho những service sau (Jenkins, Gitlab, Uptime Kuma và Harbor)
-   ![Add proxy host](./images/day04/image-2.png)
-8. **Cấu hình SSL:**
+5. **Forward Hostname & Port:** `container-name` / `internal ip` : `container-port` (Lấy ở [bảng trên](#2-quy-hoạch-tên-miền-domain-mapping))
+6. **Websockets Support:** `On`
+
+![Add proxy host](./images/day04/image-2.png)
+
+7. **Cấu hình SSL:**
    Để hệ thống chuyên nghiệp và an toàn hơn, bạn có thể cấp chứng chỉ SSL miễn phí qua tab **SSL** trong NPM.
    - Chọn **Request a new SSL Certificate**.
    - Đồng ý với các điều khoản của Let's Encrypt.
    - NPM sẽ tự động thực hiện quá trình HTTP Challenge và cấp Cert cho bạn trong vòng 30 giây.
-     ![alt text](./images/day04/image-3.png)
+
+![alt text](./images/day04/image-3.png)
 
 :::info[Kết quả]
 Cấu hình cuối cùng sẽ như sau
@@ -190,6 +73,8 @@ client_max_body_size 0;
 proxy_set_header X-Forwarded-Proto $scheme;
 ```
 
+![harbor config](./images/day04/image-5.png)
+
 :::
 
 ---
@@ -202,6 +87,6 @@ Khi bạn chuyển vùng sự cố (Failover) từ GKE về On-premise, ứng d�
 
 ## Kết luận
 
-Bây giờ, mọi dịch vụ của chúng ta đã "có danh có phận" trên Internet thông qua các Domain đẹp. Đây là bước chuẩn bị cuối cùng để chúng ta bước vào phần hấp dẫn nhất: **Xây dựng Jenkins Pipeline thực thụ.**
+Bây giờ, mọi dịch vụ của chúng ta đã "có danh có phận" trên Internet thông qua các Domain đẹp.
 
-Hẹn gặp lại các bạn ở **Bài 5: Cấu hình Gitlab và Jenkins**
+Hẹn gặp lại các bạn ở [**Bài 5: Cấu hình Gitlab**](./05-ConfigGitLab.md)
