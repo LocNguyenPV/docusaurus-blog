@@ -94,11 +94,17 @@ Thay vì dùng mật khẩu (kém an toàn), chúng ta sử dụng cặp khóa S
 
 ```cmd
 Host gitlab-personal
-  HostName gitlab.codebyluke.io.vn
+  HostName your-domain-gitlab-name
   User git
   IdentityFile YOUR-PATH-TO-PRIVATE-KEY
   Port 222 # Vì container đang map port 222:22
   PreferredAuthentications publickey
+```
+
+- Sau đó, sử dụng lệnh sau để kiểm thử kết nối
+
+```bash
+ssh -T git@gitlab-personal
 ```
 
 **3.3. Personal Access Token (PAT) - Chìa khóa cho sự tự động**
