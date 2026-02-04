@@ -71,11 +71,12 @@ Việc tách đôi giúp tránh lỗi "vòng lặp vô tận". Nếu bạn để
 
 ---
 
-### 3. Cấu hình
+## 3. Cấu hình
 
 Để Jenkins có thể "nói chuyện" được với GitLab thông qua Domain chúng ta đã cấu hình ở [Bài 4](./04-ConfigNPM.md) và có thể clone/push code lên repository thì ta cần phải thực hiện vài việc sau:
 
-**3.1. Sửa lỗi đường dẫn Clone (External URL)**
+### 3.1. Sửa lỗi đường dẫn Clone (External URL)
+
 Nếu bạn thấy link clone trên GitLab hiện IP container hoặc `localhost`, hãy vào file cấu hình `gitlab.rb` trên máy chủ và chỉnh sửa:
 
 ```bash
@@ -84,7 +85,8 @@ external_url 'http://gitlab.codebyluke.io.vn'
 
 Sau đó chạy `gitlab-ctl reconfigure`. Lúc này, mọi đường dẫn sẽ chuẩn hóa theo Domain qua Nginx Proxy Manager.
 
-**3.2. Kết nối bằng SSH Key (Dành cho máy dev)**
+### 3.2. Kết nối bằng SSH Key (Dành cho máy dev)
+
 Thay vì dùng mật khẩu (kém an toàn), chúng ta sử dụng cặp khóa SSH:
 
 - Tạo key trên máy local của bạn với câu lệnh: `ssh-keygen -t ed25519`.
@@ -107,7 +109,7 @@ Host gitlab-personal
 ssh -T git@gitlab-personal
 ```
 
-**3.3. Personal Access Token (PAT) - Chìa khóa cho sự tự động**
+### 3.3. Personal Access Token (PAT) - Chìa khóa cho sự tự động
 
 Để Jenkins có quyền "thay mặt" bạn cập nhật phiên bản ứng dụng vào Repo `ecommerce-manifest`, bạn cần tạo hai **Personal Access Token**
 
@@ -118,10 +120,9 @@ Quy trình thực hiện như sau:
 
 - Vào **User Settings** -> **Personal Access Tokens**.
 - Đặt tên cho token.
-- Tích chọn quyền tương ứng
-- Lưu mã Token này lại để sử dụng cho bài sau
+- Tích chọn quyền tương ứng (**Lưu mã Token này lại để sử dụng cho bài sau**)
 
-  ![pat](./images/day05/image-3.png)
+![pat](./images/day05/image-3.png)
 
 :::tip[Security fix cho Gilab]
 Trong quá trình làm, mình từng gặp lỗi Jenkins không thể clone code dù đã add đúng Key. Hóa ra là do GitLab chạy trong Docker có cơ chế bảo mật chặn các yêu cầu từ mạng nội bộ (Outbound requests).
@@ -131,7 +132,7 @@ Trong quá trình làm, mình từng gặp lỗi Jenkins không thể clone code
 
 ---
 
-### Kết luận
+## Kết luận
 
 Xong Bài 5, chúng ta đã có một "trạm chỉ huy" GitLab cực kỳ chuẩn chỉnh với tư duy GitOps hiện đại. Mọi thứ đã sẵn sàng để được kéo về và xử lý bởi bộ máy thực thi.
 

@@ -37,7 +37,7 @@ Dưới đây là bảng tổng hợp danh sách Credentials cần tạo trên J
 
 ## 2. Cấu hình kết nối GitLab (Integration)
 
-Bạn còn nhớ 2 token ở **Gitlab** tạo ở [bài 5](05-ConfigGitLab.md) không? Bây giờ chúng ta sẽ sử dụng tại đây
+Bạn còn nhớ 2 token ở **Gitlab** tạo ở [bài 5](05-ConfigGitLab.md#33-personal-access-token-pat---chìa-khóa-cho-sự-tự-động) không? Bây giờ chúng ta sẽ sử dụng tại đây
 
 ### Bước 1: Tạo Credential cho System (Kết nối API)
 
@@ -124,7 +124,7 @@ Import trên Jenkins:
 - **ID:** `gcp-service-account-key`
 
 :::danger
-Cách này chỉ dùng cho mục đích bài lab, không nên sử dụng trong thực tế vì có khả năng bị lộ key.
+Cách này chỉ dùng cho mục đích bài lab, không nên sử dụng trong thực tế vì có khả năng bị lộ key. Thay vào đó nên sử dụng [Workload Identity Federation](https://docs.cloud.google.com/iam/docs/workload-identity-federation)
 :::
 
 ## Kết luận

@@ -4,6 +4,22 @@
 
 ![alt text](./images/day07/image.png)
 
+## Kích hoạt Role-based Strategy Plugin
+
+Trước khi cấu hình, ta cần phải kích hoạt plugin trước. Quy trình như sau:
+
+1. Truy cập vào **Security** trong Jenkins
+
+![jenkins security](./images/day07/image-7.png)
+
+2. Chuyển cơ chế **Authorization** thành `Role-based Strategy`
+
+![jenkins authorization](./images/day07/image-8.png)
+
+3. Nhấn **Save**
+
+Tiếp theo, ta sẽ tìm hiểu và cấu hình role theo best practices trong Jenkins
+
 ## Phân quyền QA: Best Practices với RBAC
 
 Trong plugin **Role-based Authorization Strategy**, sai lầm phổ biến là cấp quyền trực tiếp vào Global Role.
@@ -40,9 +56,8 @@ Tuyệt đối **KHÔNG** cấp quyền `Administer`, `Credentials`, hay `Run Sc
 
 Đây là "chìa khóa phòng làm việc". Chúng ta sẽ giới hạn QA chỉ được tác động vào đúng dự án họ phụ trách.
 
-- **Pattern (Quan trọng):** Sử dụng Regex để khớp tên Job. Ví dụ: `ecommerce-.*` (QA chỉ nhìn thấy các Job bắt đầu bằng từ khóa `ecommerce-`).
-
-> Ở đây ta sẽ setup Pattern với giá trị `Hybrid-cloud` để thuận tiện cho bài lab
+- **Pattern:** Sử dụng Regex để khớp tên Job. Ví dụ: `ecommerce-.*` (QA chỉ nhìn thấy các Job bắt đầu bằng từ khóa `ecommerce-`).
+  > Ở đây ta sẽ setup Pattern với giá trị `Hybrid-cloud` để thuận tiện cho bài lab
 
 :::danger[Quan trọng]
 Đừng dùng `.*` nếu bạn không muốn QA thấy cả các Job bảo trì hệ thống.
@@ -63,6 +78,8 @@ Tuyệt đối **KHÔNG** cấp quyền `Administer`, `Credentials`, hay `Run Sc
 - `Job/Delete` (Xóa job).
 
 :::
+
+**P/s:** Nhớ nhấn **Save** để lưu lại cấu hình
 
 ### 3. Assign Roles
 
