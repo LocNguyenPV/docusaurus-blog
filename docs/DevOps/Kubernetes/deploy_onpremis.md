@@ -177,7 +177,25 @@ sudo kubeadm init
 mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
-kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/calico.yaml
+
+# 1. Download file manifest
+curl https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/calico.yaml -O
+```
+
+:::tip[Setup Calico on VM's cloud]
+**If you use VM on cloud**, you must turn off `IP-IP` and turn on `VXLAN` in calico
+```bash
+# Use sed to turn off IPIP & turn on VXLAN
+# Find patch IPIP="Always" và change to "Never"
+sed -i 's/name: CALICO_IPV4POOL_IPIP\n value: "Always"/name: CALICO_IPV4POOL_IPIP\n  value: "Never"/g' calico.yaml
+# Find patch VXLAN="Never" và change to "Always"
+sed -i 's/name: CALICO_IPV4POOL_VXLAN\n value: "Never"/name: CALICO_IPV4POOL_VXLAN\n value: "Always"/g' calico.yaml
+```
+:::
+
+```bash
+# Apply file 
+kubectl apply -f calico.yaml
 ```
 
 After the initial setup, it'll have command follow format below - use it to add **worker**
