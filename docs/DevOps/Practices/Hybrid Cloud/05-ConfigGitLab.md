@@ -111,10 +111,48 @@ ssh -T git@gitlab-personal
 
 ### 3.3. Personal Access Token (PAT) - Chìa khóa cho sự tự động
 
-Để Jenkins có quyền "thay mặt" bạn cập nhật phiên bản ứng dụng vào Repo `ecommerce-manifest`, bạn cần tạo hai **Personal Access Token**
+Việc quản lý quyền truy cập thông qua Personal Access Token (PAT) là bước cực kỳ quan trọng để đảm bảo tính bảo mật và khả năng tự động hóa mượt mà cho hệ thống CI/CD.
 
-- Một token có quyền `api` để Jenkins update build stage cho GitLab - `jenkins-report`
-- Một token có quyền `write_repository` và `read_repository` để Jenkins clone/push code - `jenkins-pipeline`
+Dưới đây là cách phân loại và định nghĩa lại 3 loại token này một cách rõ ràng, dễ hiểu hơn:
+
+---
+
+## Danh sách các Personal Access Token (PAT) cần thiết
+
+Để hệ thống vận hành tự động, chúng ta cần khởi tạo 3 **PAT** riêng biệt trên GitLab với các phạm vi quyền (scopes) cụ thể như sau:
+
+### 1. jenkins-report-token
+
+- **Mục đích:** Cho phép Jenkins gửi thông báo trạng thái (Success/Fail) của các giai đoạn build về giao diện GitLab.
+- **Quyền hạn (Scope):** `api`
+- **Vị trí sử dụng:** Cấu hình trong phần `GitLab Connection` của Jenkins.
+
+### 2. jenkins-pipeline-token
+
+- **Mục đích:** Đây là quyền "vận hành" chính, cho phép Jenkins tương tác trực tiếp với mã nguồn để thực hiện các thay đổi tự động.
+- **Quyền hạn (Scopes):**
+- `read_repository`: Để Jenkins có thể tải (clone) mã nguồn về kiểm tra.
+- `write_repository`: Để Jenkins tự động cập nhật tag phiên bản mới vào các file manifest trong repo `ecommerce-manifest`.
+
+- **Vị trí sử dụng:** Lưu trong `Jenkins Credentials`.
+
+### 3. argocd-token
+
+- **Mục đích:** Cung cấp "quyền xem" cho ArgoCD để nó có thể theo dõi sự thay đổi trong repository manifest và đồng bộ lên Kubernetes.
+- **Quyền hạn (Scope):** `read_repository`
+- **Vị trí sử dụng:** Cấu hình trong phần `Repository Connection` của giao diện quản trị ArgoCD.
+
+<!-- ### Bảng tổng hợp nhanh
+
+| Tên Token            | Đối tượng sử dụng | Quyền hạn (Scope)         | Chức năng chính                            |
+| -------------------- | ----------------- | ------------------------- | ------------------------------------------ |
+| **jenkins-report**   | Jenkins           | `api`                     | Cập nhật trạng thái Build Stage lên GitLab |
+| **jenkins-pipeline** | Jenkins           | `read_repo`, `write_repo` | Clone code và tự động Update Manifest      |
+| **argocd-pat**       | ArgoCD            | `read_repo`               | Đọc file Manifest để đồng bộ lên Cluster   | -->
+
+:::danger[Lưu ý bảo mật]
+Hãy đặt ngày hết hạn (Expiry date) cho các token này và lưu trữ chúng an toàn trong các trình quản lý biến môi trường của Jenkins/ArgoCD, tuyệt đối không viết trực tiếp vào mã nguồn.
+:::
 
 Quy trình thực hiện như sau:
 

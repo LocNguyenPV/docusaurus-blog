@@ -1,28 +1,10 @@
 # Bài 10: GitOps - ArgoCD và quản lý đa cụm
 
-Sau chuỗi bài về CI (Continuous Integration) với Jenkins, chúng ta đã có Container Image nằm gọn trong Harbor. Giờ là lúc đưa ứng dụng "lên sóng" (CD - Continuous Delivery).
+Sau chuỗi bài về CI (Continuous Integration) với Jenkins, Gitlab. Giờ là lúc đưa ứng dụng "lên sóng" (CD - Continuous Delivery).
 
 Thay vì để Jenkins chạy lệnh `kubectl apply` (cách làm cũ, rủi ro bảo mật cao), chúng ta sẽ áp dụng **GitOps** với **ArgoCD**. ArgoCD sẽ đóng vai trò như một "tháp canh", liên tục đối chiếu giữa trạng thái mong muốn (Git) và thực tế (Cluster) để đồng bộ.
 
 Trong bài này, chúng ta sẽ thiết lập kiến trúc **Centralized Management**: ArgoCD chạy tại **On-premise** (để tiết kiệm tài nguyên Cloud) nhưng quản lý deployments cho cả **Local** và **GKE**.
-
-### 0. Chuẩn bị: Hạ tầng mạng Calico (Network CNI)
-
-Trước khi cài ArgoCD, hãy đảm bảo cụm K8s On-premise của bạn đang sử dụng **Calico**. Calico cung cấp hiệu năng tốt hơn và tính năng Network Policy (quan trọng để bảo mật ArgoCD sau này).
-
-SSH vào cụm master node và chạy lệnh sau để cài đặt Calico Operator và Custom Resources:
-
-```bash
-# Cài Operator
-kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.27.0/manifests/tigera-operator.yaml
-# Nạp cấu hình mạng
-kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.27.0/manifests/custom-resources.yaml
-
-```
-
-Chờ vài phút cho đến khi `kubectl get nodes` báo trạng thái `Ready`.
-
----
 
 ### 1. Cài đặt ArgoCD trên On-premise
 
@@ -95,27 +77,44 @@ ArgoCD cần quyền đọc repo `ecommerce-manifest` của bạn.
 
 - **Type:** `Git`.
 - **Project:** `default`.
-- **Repository URL:** `http://git.codebyluke.io.vn/hybrid-cloud/ecommerce-manifest.git` (Manifest repository)
+- **Repository URL:** `http://gitlab.codebyluke.io.vn/hybrid-cloud/manifest.git` (Manifest repository)
 - **Username:** `git`.
-- **Password:** Dùng chính cái **PAT** (Token) bạn đã tạo ở bài Jenkins.
+- **Password:** `argocd-token` đã tạo ở [bài trước](./06-ConfigJenkins.md#3-quản-lý-credentials).
 
 4. Nhấn **Connect**. Nếu hiện trạng thái **Successful** màu xanh là OK.
-   ![alt text](image-2.png)
 
-:::tip[Best Practice]
-
-Ở bước này, để tách biệt thì ta có thể tạo một **PAT** riêng biệt cho ArgoCD, chỉ cần quyền `read_api` vì ArgoCD không cần update gì file manifest cả
-
-:::
+![alt text](image-2.png)
 
 ---
 
 ### 4. Kết nối cụm GKE (Remote Cluster)
 
-Bây giờ chúng ta sẽ thêm cụm Google Kubernetes Engine vào ArgoCD.
+Bây giờ chúng ta sẽ thêm cụm Google Kubernetes Engine vào ArgoCD trên máy **VM**
 
-**Bước 4.1: Chuẩn bị Kubeconfig**
-Trên máy `devops-vm` (nơi cài ArgoCD CLI), hãy login vào GKE:
+**Bước 4.1: Cài đặt `gke-gcloud-auth-plugin`**
+Vì ta cần thêm cụm GKE vào ArgoCD nên cần cài đặt plugin trước
+
+```bash
+# 1. Cập nhật danh sách gói và cài đặt các gói hỗ trợ HTTPS
+sudo apt-get update
+sudo apt-get install apt-transport-https ca-certificates gnupg curl -y
+
+# 2. Thêm khóa GPG của Google để xác thực gói tin
+curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
+
+# 3. Thêm repository của Google Cloud vào hệ thống
+echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+
+# 4. Cài đặt plugin
+sudo apt-get update
+sudo apt-get install google-cloud-sdk-gke-gcloud-auth-plugin -y
+
+# Xác nhận cài đặt thành công chưa
+gke-gcloud-auth-plugin --version
+
+```
+
+**Bước 4.2: Chuẩn bị Kubeconfig**
 
 ```bash
 # Lấy credentials GKE về máy
@@ -132,23 +131,43 @@ kubectl config get-contexts
 # Đổi tên context GKE thành 'gke-cloud'
 kubectl config rename-context <CONTEXT_GKE_DAI_NGOANG> gke-cloud
 
-# Đổi tên context K8s hiện tại thành 'on-prem-local'
-kubectl config rename-context default on-prem-local
-
 ```
+
+**Bước 4.3: Thêm role cho máy VM**
+Trước khi thêm **GKE** vào ArgoCD, ta cần phải cấu hình thêm role `Kubernetes Engine Admin` cho `Service Account` của VM.
+
+1. Truy cập vào GCP, vào **Service Account** và tìm email có đuôi `***@developer.gserviceaccount.com`
+
+![alt text](image-3.png)
+
+2. Truy cập tab `Permissions` và `Manage access` để thêm role
+
+![alt text](image-4.png)
+
+:::note[Tại sao ArgoCD cần quyền này?]
+Khi bạn chạy `argocd cluster add`, ArgoCD sẽ thực hiện các bước sau:
+
+1. Tạo một ServiceAccount tên là argocd-manager bên trong cluster GKE.
+2. Tạo một ClusterRole để định nghĩa các quyền mà ArgoCD có (thường là quyền Admin để nó có thể deploy ứng dụng).
+3. Tạo một ClusterRoleBinding để gắn quyền đó cho ServiceAccount trên.
+
+Do đó ta cần cấu hình thêm role `Kubernetes Engine Admin` cho máy VM. Nếu không hệ thống từ chối cho bạn tạo ClusterRole vì tài khoản của bạn chưa được "tin tưởng" tuyệt đối trong nội bộ Kubernetes.
+:::
 
 **Bước 4.3: Add Cluster vào ArgoCD**
 Đăng nhập CLI và add cluster:
 
 ```bash
-# Login vào ArgoCD qua domain
+# Login vào ArgoCD qua domain (login bằng email và password)
 argocd login argocd.codebyluke.io.vn
 
 # Add cụm GKE
 argocd cluster add gke-cloud
 ```
 
-_Lệnh này sẽ tự động tạo ServiceAccount trên GKE để ArgoCD có quyền điều khiển._
+Nếu **GKE** được thêm thành công sẽ xuất hiện thông báo như hình
+
+![ArgoCD add GKE](image-5.png)
 
 ---
 
@@ -160,39 +179,33 @@ Chúng ta sẽ deploy ứng dụng E-commerce lên cả 2 môi trường cùng l
 
 - **New App:** `ecommerce-on-prem`
 - **Source:** Repo Manifest, path: `ecommerce/overlays/on-premise`
-- **Destination:** `https://kubernetes.default.svc` (Chính là cụm K3s cài ArgoCD).
+- **Destination:**
+  - **Cluster URL:** `https://kubernetes.default.svc` (Chính là cụm K8s cài ArgoCD).
+  - **Namespace:** `ecommerce`
 - **Sync Policy:** Automatic (Prune + Self Heal).
 
 **Môi trường 2: Google Cloud (GKE)**
 
 - **New App:** `ecommerce-gke`
 - **Source:** Repo Manifest, path: `ecommerce/overlays/cloud`
-- **Destination:** Chọn URL cụm GKE vừa add ở bước 4.3.
+- **Destination:**
+  - **Cluster URL:** `https://<GKE-IP>` (Chính là cụm K8s cài ArgoCD).
+  - **Namespace:** `ecommerce`
+
+![gke cluster](image-6.png)
 
 Sau khi nhấn Create, ArgoCD sẽ bắt đầu kéo Manifest về và đồng bộ. Các ô xanh lá cây (Synced/Healthy) sẽ lần lượt hiện lên.
 
----
+![ArgoCD home page](image-7.png)
 
-### 6. Góc kinh nghiệm: Xử lý lỗi Pull Image từ Harbor
+:::tip[Lấy IP trên GKE]
+Vì bài này ta sử dụng `Service: LoadBalancer`, GCP sẽ tự động tạo một `External IP` và một bộ cân bằng tải trên GCP để dẫn luồng vào Cluster. Ta có thể sử dụng lệnh `kubectl get svc -n <NAMESPACE-ECOMMERCE>` (có thể chạy trên Google Console / VM) để lấy `External IP` của app
 
-Một vấn đề 99% các bạn sẽ gặp: Pod báo lỗi `ImagePullBackOff` hoặc `ErrImagePull`.
-**Lý do:** K8s (cả K3s và GKE) không thể kéo image từ Harbor Private Registry vì thiếu thông tin đăng nhập.
+![external ip gke](image-8.png)
 
-**Giải pháp:**
-Bạn cần tạo Secret `regcred` trên cả 2 cụm K8s và patch vào ServiceAccount `default`.
+**Note:** Nếu chạy lệnh mà thấy cột `EXTERNAL-IP` vẫn hiện `<pending>`, hãy đợi khoảng 1-2 phút để GCP cấp phát IP nhé.
 
-```bash
-# Chạy lệnh này trên cả 2 context (on-prem-local và gke-cloud)
-kubectl create secret docker-registry regcred \
-  --docker-server=registry.codebyluke.io.vn \
-  --docker-username=admin \
-  --docker-password=Harbor12345 \
-  --docker-email=admin@example.com
-
-# Patch vào ServiceAccount default để Pod tự động dùng
-kubectl patch serviceaccount default -p '{"imagePullSecrets": [{"name": "regcred"}]}'
-
-```
+:::
 
 ---
 
@@ -202,6 +215,6 @@ Hệ thống **GitOps Hybrid-Cloud** của chúng ta đã thành hình!
 
 1. **Code** nằm ở GitLab.
 2. **Jenkins** build và đẩy Image vào Harbor.
-3. **ArgoCD** (trên nền Calico K3s) tự động phát hiện thay đổi và cập nhật ứng dụng lên cả On-premise và GKE.
+3. **ArgoCD** (trên nền Calico) tự động phát hiện thay đổi và cập nhật ứng dụng lên cả On-premise và GKE.
 
-Ở bài tiếp theo, chúng ta sẽ tối ưu hóa quy trình bằng cách thêm **Ingress Controller** để user có thể truy cập vào web E-commerce từ Internet!
+Ở bài tiếp theo, chúng ta sẽ bắt đầu triển khai kịch bản **Failover**

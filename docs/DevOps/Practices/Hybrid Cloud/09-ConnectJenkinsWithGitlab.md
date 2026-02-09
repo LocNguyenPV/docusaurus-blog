@@ -72,11 +72,20 @@ Ta đã hoàn tất cấu hình bên Jenkins, tiếp theo ta cần phải cấu 
 
 ![result](./images/day09/image-9.png)
 
-:::tip[Kiểm thử webhook]
-Có thể nhấn nút `Test` với `Push event` để kiểm thử
+4. Kiểm thử webhook
+   - Nhấn nút `Test` với `Push event` để trigger Jenkins build pipeline
+
 ![alt text](./images/day09/image-12.png)
-Nếu Jenkins trigger build pipeline thì thành công
+
 ![alt text](./images/day09/image-13.png)
+
+:::tip[Lưu ý cho Custom Domain]
+
+Nếu pipeline không thể nhìn thấy và sử dụng các `credentials` trong **Custom Domain**, bạn nên kiểm tra lại cấu hình **Specification** khi tạo Domain, nếu có cấu hình `HostName` thì nên đảm bảo đúng với Domain của bạn. Ví dụ:
+
+- **Specification:** Hostname
+- **Include:** `*.codebyluke.io.vn` (hoặc liệt kê cụ thể: `git.codebyluke.io.vn`, `registry.codebyluke.io.vn`).
+
 :::
 
 ---
