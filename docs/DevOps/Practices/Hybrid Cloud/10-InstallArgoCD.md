@@ -40,7 +40,7 @@ Kiểm tra port vừa được gán (ví dụ `30080`):
 kubectl get svc argocd-server -n argocd
 ```
 
-![alt text](image.png)
+![alt text](./images/day10/image.png)
 
 **Bước 1.4: Lấy mật khẩu đăng nhập ban đầu**
 
@@ -63,7 +63,7 @@ kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.pas
 - **Scheme:** ⚠️ **HTTPS** (Bắt buộc! Vì ArgoCD server tự chạy SSL).
 - **Tab SSL:** Request chứng chỉ Let's Encrypt mới & Force SSL.
 
-![alt text](image-1.png)
+![alt text](./images/day10/image-1.png)
 
 ---
 
@@ -83,7 +83,7 @@ ArgoCD cần quyền đọc repo `ecommerce-manifest` của bạn.
 
 4. Nhấn **Connect**. Nếu hiện trạng thái **Successful** màu xanh là OK.
 
-![alt text](image-2.png)
+![alt text](./images/day10/image-2.png)
 
 ---
 
@@ -138,11 +138,11 @@ Trước khi thêm **GKE** vào ArgoCD, ta cần phải cấu hình thêm role `
 
 1. Truy cập vào GCP, vào **Service Account** và tìm email có đuôi `***@developer.gserviceaccount.com`
 
-![alt text](image-3.png)
+![alt text](./images/day10/image-3.png)
 
 2. Truy cập tab `Permissions` và `Manage access` để thêm role
 
-![alt text](image-4.png)
+![alt text](./images/day10/image-4.png)
 
 :::note[Tại sao ArgoCD cần quyền này?]
 Khi bạn chạy `argocd cluster add`, ArgoCD sẽ thực hiện các bước sau:
@@ -167,7 +167,7 @@ argocd cluster add gke-cloud
 
 Nếu **GKE** được thêm thành công sẽ xuất hiện thông báo như hình
 
-![ArgoCD add GKE](image-5.png)
+![ArgoCD add GKE](./images/day10/image-5.png)
 
 ---
 
@@ -192,16 +192,16 @@ Chúng ta sẽ deploy ứng dụng E-commerce lên cả 2 môi trường cùng l
   - **Cluster URL:** `https://<GKE-IP>` (Chính là cụm K8s cài ArgoCD).
   - **Namespace:** `ecommerce`
 
-![gke cluster](image-6.png)
+![gke cluster](./images/day10/image-6.png)
 
 Sau khi nhấn Create, ArgoCD sẽ bắt đầu kéo Manifest về và đồng bộ. Các ô xanh lá cây (Synced/Healthy) sẽ lần lượt hiện lên.
 
-![ArgoCD home page](image-7.png)
+![ArgoCD home page](./images/day10/image-7.png)
 
 :::tip[Lấy IP trên GKE]
 Vì bài này ta sử dụng `Service: LoadBalancer`, GCP sẽ tự động tạo một `External IP` và một bộ cân bằng tải trên GCP để dẫn luồng vào Cluster. Ta có thể sử dụng lệnh `kubectl get svc -n <NAMESPACE-ECOMMERCE>` (có thể chạy trên Google Console / VM) để lấy `External IP` của app
 
-![external ip gke](image-8.png)
+![external ip gke](./images/day10/image-8.png)
 
 **Note:** Nếu chạy lệnh mà thấy cột `EXTERNAL-IP` vẫn hiện `<pending>`, hãy đợi khoảng 1-2 phút để GCP cấp phát IP nhé.
 
