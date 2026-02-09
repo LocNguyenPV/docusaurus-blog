@@ -5,10 +5,10 @@ authors: [me]
 tags: [tips]
 ---
 
-
 Have you ever confused when saw something like u <u>v2.1.3</u> or <u>v1.11.0-beta</u>.
 
 ![meme](meme.png)
+
 <!-- truncate -->
 
 ## What is that?
@@ -26,6 +26,19 @@ This is **Semantic Versioning**, or we usually call **SemVer**. It's offer a sys
 
 - It helps manage project version easily, avoid conflict update
 - Make communicate between develop teams and user more clearly
+
+## Naming Convention
+
+We can increase the `VERSION` factor based on the commit message. We must follow the naming conventions in our team. Below are some conventions you can use.
+
+| Prefix       | Description                                  | Example                                    |
+| ------------ | -------------------------------------------- | ------------------------------------------ |
+| **feat**     | Add new feature                              | `feat(auth): Login by Google`              |
+| **fix**      | Bug fix                                      | `fix(db): Query logic`                     |
+| **docs**     | Change document                              | `docs: Update guideline`                   |
+| **chore**    | Any change relate to build, tool and library | `chore: update docker-compose`             |
+| **refactor** | Refactor source code (no logic change)       | `refactor: Optimize image load`            |
+| **test**     | Add / edit unit test                         | `test: Add test case for checkout feature` |
 
 ## Tips
 

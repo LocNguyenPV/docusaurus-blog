@@ -98,4 +98,4 @@ Nếu pipeline không thể nhìn thấy và sử dụng các `credentials` tron
 2. **Credentials:** Được tổ chức khoa học, phân tách rõ ràng giữa mục đích quản trị hệ thống và thực thi pipeline.
 3. **Gitlab connection:** Trigger pipeline thông qua webhook
 
-Hệ thống đã hoàn thành 70%. Ở [bài tiếp theo](./10-InstallArgoCD.md), chúng ta sẽ bắt đầu cấu hình **ArgoCD**!
+Hệ thống đã hoàn thành 70%. Ở [bài tiếp theo](./10-InstallArgoCD.md), chúng ta sẽ tìm hiểu và thay đổi thông tin cấu hình trong `Jenkinsfile` để pipeline chạy được!
